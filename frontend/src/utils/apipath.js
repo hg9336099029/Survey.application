@@ -8,7 +8,7 @@ export const API_PATH = {
         CREATE_POLL: `${BASE_URL}/api/v1/auth/create-poll`,
         GET_POLLS: `${BASE_URL}/api/v1/auth/getpolls`,
         GET_USERPOLLS: `${BASE_URL}/api/v1/auth/userpoll`,
-        DELETE_POLL: `${BASE_URL}/api/v1/auth/delete-poll`,
+        DELETE_POLL: `${BASE_URL}/api/v1/auth/delete-poll`, 
     },
     IMAGE: {
         UPLOAD: `${BASE_URL}/api/v1/image/upload-image`,

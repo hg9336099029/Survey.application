@@ -1,5 +1,7 @@
 const express = require('express');
 const Poll = require('../models/poll');
+const User = require('../models/user');
+
 // Create poll
 const createPoll = async (req, res) => {
     try {
@@ -36,9 +38,13 @@ const createPoll = async (req, res) => {
     }
 };
 
+// Get all polls
 const getAllPolls = async (req, res) => {
     try {
-        const polls = await Poll.find().populate('createdBy', 'username').sort({ createdAt: -1 }).lean();
+        const polls = await Poll.find()
+            .populate('createdBy', 'username fullname')
+            .sort({ createdAt: -1 })
+            .lean();
         res.status(200).json({ polls });
     } catch (error) {
         res.status(500).json({ error: error.message });
@@ -48,12 +54,15 @@ const getAllPolls = async (req, res) => {
 // Get polls of a specific user
 const getUserPolls = async (req, res) => {
     try {
-        const polls = await Poll.find({ createdBy: req.user._id }).populate('createdBy', 'username').sort({ createdAt: -1 });
+        const polls = await Poll.find({ createdBy: req.user._id })
+            .populate('createdBy', 'username fullname')
+            .sort({ createdAt: -1 });
         res.status(200).json({ polls });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
 };
+
 // Delete poll of a specific user
 const deletePoll = async (req, res) => {
     try {
@@ -67,4 +76,38 @@ const deletePoll = async (req, res) => {
     }
 };
 
-module.exports = {createPoll, getAllPolls, getUserPolls, deletePoll };
+// Vote on a poll
+const voteOnPoll = async (req, res) => {
+    try {
+        const { optionIndex } = req.body;
+        const { pollId } = req.params;
+
+        const poll = await Poll.findById(pollId);
+        if (!poll) {
+            return res.status(404).json({ message: "Poll not found" });
+        }
+
+        // Check if the user has already voted
+        if (poll.voters.includes(req.user._id)) {
+            return res.status(400).json({ message: "You have already voted on this poll" });
+        }
+
+        // Increment the vote count for the selected option
+        poll.options[optionIndex].votes += 1;
+        poll.voters.push(req.user._id); // Add the user to the list of voters
+        await poll.save();
+
+        // Add the poll to the user's votedPolls
+        const user = await User.findById(req.user._id);
+        user.votedPolls.push(pollId);
+        await user.save();
+
+        res.status(200).json({ message: "Voted successfully", poll });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+
+
+};
+
+module.exports = { createPoll, getAllPolls, getUserPolls, deletePoll, voteOnPoll };

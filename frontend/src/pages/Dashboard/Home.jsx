@@ -11,7 +11,7 @@ const Home = () => {
   const [filteredPolls, setFilteredPolls] = useState([]);
   // State to store the currently selected filter
   const [selectedFilter, setSelectedFilter] = useState('All-polls');
-
+  
   // useEffect hook to fetch polls when the component mounts
   useEffect(() => {
     // Fetch polls from the backend
@@ -30,7 +30,7 @@ const Home = () => {
 
     fetchPolls();
   }, []);
-
+  
   // Function to handle filter selection
   const handleFilterSelect = (filter) => {
     // Update the selected filter state
@@ -124,10 +124,13 @@ const Home = () => {
                 {poll.pollType === "open ended" && (
                   <div className="h-auto space-y-2">
                     <textarea name="" id="" placeholder='please comment here' className='flex flex-col justify-center items-center w-1/2 h-auto bg-slate-50 border-2 border-gray-200 rounded-xl p-2'></textarea>
+                    <button class="bg-sky-400 hover:transition-transform transform hover:scale-105  text-white font-sans py-1 px-3 rounded-full">
+                      Submit
+                    </button>
                   </div>
                 )}
 
-                {poll.pollType === "imagebased" && (
+                {poll.pollType === "imagebased" &&(
                   <div className="grid grid-cols-2 gap-2">
                     {poll.images.map((image, index) => (
                       <button key={index} className="relative w-full h-40 border rounded-md overflow-hidden">

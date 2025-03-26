@@ -13,7 +13,7 @@ const Homeright = () => {
     const fetchUserData = async () => {
       try {
         const response = await axiosInstance.get(API_PATH.AUTH.GET_USER);
-        setUser(response.data.user.votedPolls.length);
+        setUser(response.data.user); // Set the entire user object
       } catch (error) {
         console.error('Error fetching user data:', error);
       }
@@ -53,12 +53,12 @@ const Homeright = () => {
           </div>
 
           <div className="text-center">
-            <p className="font-semibold">51</p>
+            <p className="font-semibold">{user ? user.votedPolls.length :0}</p>
             <p className="text-sm text-gray-500">Polls Voted</p>
           </div>
 
           <div className="text-center">
-            <p className="font-semibold">0</p>
+            <p className="font-semibold">{user ? user.bookmarkedPolls.length : 0}</p>
             <p className="text-sm text-gray-500">Polls Bookmarked</p>
           </div>
         </div>
