@@ -79,35 +79,70 @@ const deletePoll = async (req, res) => {
 // Vote on a poll
 const voteOnPoll = async (req, res) => {
     try {
-        const { optionIndex } = req.body;
-        const { pollId } = req.params;
+        const { pollId } = req.params; // Get pollId from URL params
+        const { optionIndex } = req.body; // Get optionIndex from request body
+         
+        // Validate optionIndex
+        if (optionIndex === undefined || optionIndex < 0) {
+            return res.status(400).json({ message: "Invalid option index" });
+        }
 
         const poll = await Poll.findById(pollId);
+       
         if (!poll) {
             return res.status(404).json({ message: "Poll not found" });
         }
 
         // Check if the user has already voted
         if (poll.voters.includes(req.user._id)) {
-            return res.status(400).json({ message: "You have already voted on this poll" });
+            return res.status(200).json({ message: "You have already voted on this poll" });
+        }
+
+        // Ensure the optionIndex is within bounds
+        if (optionIndex >= poll.options.length) {
+            return res.status(400).json({ message: "Invalid option index" });
         }
 
         // Increment the vote count for the selected option
         poll.options[optionIndex].votes += 1;
         poll.voters.push(req.user._id); // Add the user to the list of voters
+        // Add user voted poll to the user model
+        const user = await User.findById(req.user._id);
+        user.votedPolls.push(poll._id); // Add the poll ID to the user's votedPolls array
+        await user.save(); // Save the user model
+        // Save the poll with updated votes and voters
         await poll.save();
 
-        // Add the poll to the user's votedPolls
-        const user = await User.findById(req.user._id);
-        user.votedPolls.push(pollId);
-        await user.save();
-
-        res.status(200).json({ message: "Voted successfully", poll });
+        res.status(200).json({ message: "Vote recorded successfully", poll });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
+};
+// show voted polls by particular user
 
-
+const getVotedPolls = async (req, res) => {
+    try {
+        const user = await User.findById(req.user._id).populate('votedPolls');
+        res.status(200).json({ votedPolls: user.votedPolls });
+    }
+    catch (error) {
+        res.status(500).json({ error: error.message });
+    }
 };
 
-module.exports = { createPoll, getAllPolls, getUserPolls, deletePoll, voteOnPoll };
+//show bookmarked polls by particular user
+
+const getbookmarkedPolls = async (req, res) => {
+    try {
+        const user = await User.findById(req.user._id).populate('bookmarkedPolls');
+        res.status(200).json({ bookmarkedPolls: user.bookmarkedPolls });
+    }
+    catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
+
+//bookmark the poll
+
+
+module.exports = { createPoll, getAllPolls, getUserPolls, deletePoll, voteOnPoll, getVotedPolls, getbookmarkedPolls };
