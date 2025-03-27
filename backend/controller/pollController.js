@@ -80,40 +80,48 @@ const deletePoll = async (req, res) => {
 const voteOnPoll = async (req, res) => {
     try {
         const { pollId } = req.params; // Get pollId from URL params
-        const { optionIndex } = req.body; // Get optionIndex from request body
-         
-        // Validate optionIndex
-        if (optionIndex === undefined || optionIndex < 0) {
-            return res.status(400).json({ message: "Invalid option index" });
-        }
+        const { optionIndex, comment } = req.body; // Get optionIndex or comment from request body
 
         const poll = await Poll.findById(pollId);
-       
         if (!poll) {
             return res.status(404).json({ message: "Poll not found" });
         }
 
-        // Check if the user has already voted
-        if (poll.voters.includes(req.user._id)) {
-            return res.status(200).json({ message: "You have already voted on this poll" });
+        // Check if the user has already commented
+        if (poll.pollType === "open ended" && comment) {
+            if (poll.voters.includes(req.user._id)) {
+                return res.status(400).json({ message: "You have already commented on this poll" });
+            }
+
+            poll.comments.push({ user: req.user._id, text: comment });
+            poll.voters.push(req.user._id); // Add the user to the list of voters
+            // add poll id to user's votedPolls
+            const user = await User.findById(req.user._id);
+            user.votedPolls.push(poll._id);
+            await user.save();
+            await poll.save();
+
+            return res.status(200).json({ message: "Comment submitted successfully", poll });
         }
 
-        // Ensure the optionIndex is within bounds
-        if (optionIndex >= poll.options.length) {
-            return res.status(400).json({ message: "Invalid option index" });
+        // Handle other poll types (e.g., yes/no, rating, etc.)
+        if (optionIndex !== undefined) {
+            if (poll.voters.includes(req.user._id)) {
+                return res.status(400).json({ message: "You have already voted on this poll" });
+            }
+
+            poll.options[optionIndex].votes += 1;
+            poll.voters.push(req.user._id); // Add the user to the list of voters
+            // add poll id to user's votedPolls
+            const user = await User.findById(req.user._id);
+            user.votedPolls.push(poll._id);
+            await user.save();
+            await poll.save();
+
+            return res.status(200).json({ message: "Vote recorded successfully", poll });
         }
 
-        // Increment the vote count for the selected option
-        poll.options[optionIndex].votes += 1;
-        poll.voters.push(req.user._id); // Add the user to the list of voters
-        // Add user voted poll to the user model
-        const user = await User.findById(req.user._id);
-        user.votedPolls.push(poll._id); // Add the poll ID to the user's votedPolls array
-        await user.save(); // Save the user model
-        // Save the poll with updated votes and voters
-        await poll.save();
-
-        res.status(200).json({ message: "Vote recorded successfully", poll });
+        res.status(400).json({ message: "Invalid request" });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }

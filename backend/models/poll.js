@@ -12,7 +12,13 @@ const pollSchema = new mongoose.Schema({
     options: [
         {
             text: { type: String, required: true },
-            votes: { type: Number, default: 0 }
+            votes: { type: Number, default: 0 },
+        }
+    ],
+    comments: [
+        {
+            user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+            text: { type: String, required: true },
         }
     ],
     images: [
@@ -29,7 +35,6 @@ const pollSchema = new mongoose.Schema({
         {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'User',
-            unique: true, // Ensure a user votes only once
         }
     ]
 }, { timestamps: true });

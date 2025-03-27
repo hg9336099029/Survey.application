@@ -24,6 +24,29 @@ const Home = () => {
     fetchPolls();
   }, []);
 
+  const handleVoteopenend = async (pollId) => {
+    try {
+      const response = await axiosInstance.patch(`${API_PATH.AUTH.VOTE_POLL}/${pollId}`);
+      const updatedPoll = response.data.poll;
+
+      if (response.data.message === "You have already voted on this poll") {
+      alert("You have already voted on this poll");
+        return;
+      }
+
+      setPolls((prevPolls) =>
+        prevPolls.map((poll) => (poll._id === updatedPoll._id ? updatedPoll : poll))
+      );
+
+      setFilteredPolls((prevPolls) =>
+        prevPolls.map((poll) => (poll._id === updatedPoll._id ? updatedPoll : poll))
+      );
+    }
+    catch (error) {
+      console.error('Error voting on poll:', error.response?.data || error.message);
+    }
+  }
+
   const handleVote = async (pollId, optionIndex) => {
     try {
       const response = await axiosInstance.patch(`${API_PATH.AUTH.VOTE_POLL}/${pollId}`, { optionIndex });
@@ -43,6 +66,28 @@ const Home = () => {
       );
     } catch (error) {
       console.error('Error voting on poll:', error.response?.data || error.message);
+    }
+  };
+
+  const handleCommentSubmit = async (pollId, comment) => {
+    try {
+      const response = await axiosInstance.patch(`${API_PATH.AUTH.VOTE_POLL}/${pollId}`, { comment });
+      const updatedPoll = response.data.poll;
+
+      if (response.data.message === "You have already commented on this poll") {
+        alert("You have already commented on this poll");
+        return;
+      }
+
+      setPolls((prevPolls) =>
+        prevPolls.map((poll) => (poll._id === updatedPoll._id ? updatedPoll : poll))
+      );
+
+      setFilteredPolls((prevPolls) =>
+        prevPolls.map((poll) => (poll._id === updatedPoll._id ? updatedPoll : poll))
+      );
+    } catch (error) {
+      console.error('Error submitting comment:', error.response?.data || error.message);
     }
   };
 
@@ -143,8 +188,29 @@ const Home = () => {
 
                   {poll.pollType === "open ended" && (
                     <div className="h-auto space-y-2">
-                      <textarea name="" id="" placeholder='please comment here' className='flex flex-col justify-center items-center w-1/2 h-auto bg-slate-50 border-2 border-gray-200 rounded-xl p-2'></textarea>
-                      <button className="bg-sky-400 hover:transition-transform transform hover:scale-105  text-white font-sans py-1 px-3 rounded-full" >
+                      <textarea
+                        name={`comment-${poll._id}`}
+                        id={`comment-${poll._id}`}
+                        placeholder="Please comment here"
+                        className="flex flex-col justify-center items-center w-1/2 h-auto bg-slate-50 border-2 border-gray-200 rounded-xl p-2"
+                        value={poll.comment || ""}
+                        onChange={(e) => {
+                          const updatedPolls = polls.map((p) =>
+                            p._id === poll._id ? { ...p, comment: e.target.value } : p
+                          );
+                          setPolls(updatedPolls);
+
+                          // Also update the filteredPolls state to reflect the change
+                          const updatedFilteredPolls = filteredPolls.map((p) =>
+                            p._id === poll._id ? { ...p, comment: e.target.value } : p
+                          );
+                          setFilteredPolls(updatedFilteredPolls);
+                        }}
+                      ></textarea>
+                      <button
+                        className="bg-sky-400 hover:transition-transform transform hover:scale-105 text-white font-sans py-1 px-3 rounded-full"
+                        onClick={() => handleCommentSubmit(poll._id, poll.comment)}
+                      >
                         Submit
                       </button>
                     </div>
