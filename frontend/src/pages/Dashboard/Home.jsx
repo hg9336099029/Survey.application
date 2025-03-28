@@ -3,7 +3,7 @@ import { DashboardLayout } from '../../components/layout/dashboardLayout';
 import FilterDropdown from '../../components/layout/filter';
 import { axiosInstance } from '../../utils/axiosInstance';
 import { API_PATH } from '../../utils/apipath';
-
+import { FaRegBookmark } from "react-icons/fa";
 const Home = () => {
   const [polls, setPolls] = useState([]);
   const [filteredPolls, setFilteredPolls] = useState([]);
@@ -24,31 +24,16 @@ const Home = () => {
     fetchPolls();
   }, []);
 
-  const handleVoteopenend = async (pollId) => {
-    try {
-      const response = await axiosInstance.patch(`${API_PATH.AUTH.VOTE_POLL}/${pollId}`);
-      const updatedPoll = response.data.poll;
-
-      if (response.data.message === "You have already voted on this poll") {
-      alert("You have already voted on this poll");
-        return;
-      }
-
-      setPolls((prevPolls) =>
-        prevPolls.map((poll) => (poll._id === updatedPoll._id ? updatedPoll : poll))
-      );
-
-      setFilteredPolls((prevPolls) =>
-        prevPolls.map((poll) => (poll._id === updatedPoll._id ? updatedPoll : poll))
-      );
-    }
-    catch (error) {
-      console.error('Error voting on poll:', error.response?.data || error.message);
-    }
-  }
 
   const handleVote = async (pollId, optionIndex) => {
     try {
+      // Find the poll and validate the optionIndex
+      const poll = polls.find((p) => p._id === pollId);
+      if (!poll || !poll.options || !poll.options[optionIndex]) {
+        alert("Invalid option selected");
+        return;
+      }
+
       const response = await axiosInstance.patch(`${API_PATH.AUTH.VOTE_POLL}/${pollId}`, { optionIndex });
       const updatedPoll = response.data.poll;
 
@@ -57,6 +42,7 @@ const Home = () => {
         return;
       }
 
+      // Update polls and filteredPolls with the updated poll
       setPolls((prevPolls) =>
         prevPolls.map((poll) => (poll._id === updatedPoll._id ? updatedPoll : poll))
       );
@@ -64,13 +50,44 @@ const Home = () => {
       setFilteredPolls((prevPolls) =>
         prevPolls.map((poll) => (poll._id === updatedPoll._id ? updatedPoll : poll))
       );
+
+      // Show "+1" indicator for the selected option
+      const tempPolls = [...polls];
+      const pollIndex = tempPolls.findIndex((poll) => poll._id === pollId);
+      if (pollIndex !== -1) {
+        const tempOptions = [...tempPolls[pollIndex].options];
+        if (tempOptions[optionIndex]) {
+          tempOptions[optionIndex] = {
+            ...tempOptions[optionIndex],
+            showPlusOne: true, // Add a temporary flag for "+1"
+          };
+          tempPolls[pollIndex].options = tempOptions;
+          setPolls(tempPolls);
+
+          // Remove the "+1" indicator after 2 seconds
+          setTimeout(() => {
+            const updatedTempPolls = [...tempPolls];
+            updatedTempPolls[pollIndex].options[optionIndex] = {
+              ...updatedTempPolls[pollIndex].options[optionIndex],
+              showPlusOne: false,
+            };
+            setPolls(updatedTempPolls);
+          }, 2000);
+        }
+      }
     } catch (error) {
       console.error('Error voting on poll:', error.response?.data || error.message);
+      alert(error.response?.data?.message || "An error occurred while voting on the poll.");
     }
   };
 
   const handleCommentSubmit = async (pollId, comment) => {
     try {
+      if(!comment) {
+        alert("Comment cannot be empty");
+        return;
+      }
+      // Find the poll and validate the comment
       const response = await axiosInstance.patch(`${API_PATH.AUTH.VOTE_POLL}/${pollId}`, { comment });
       const updatedPoll = response.data.poll;
 
@@ -88,6 +105,29 @@ const Home = () => {
       );
     } catch (error) {
       console.error('Error submitting comment:', error.response?.data || error.message);
+    }
+  };
+
+  const handleBookmark = async (pollId) => {
+    try{
+       const response = await axiosInstance.post(`${API_PATH.AUTH.BOOKMARK_POLL}/${pollId}`);
+
+       const updatedPoll = response.data.poll;
+        if (response.data.message === "Poll already bookmarked") {
+          alert("Poll already bookmarked");
+          return;
+        }
+       setPolls((prevPolls) =>
+         prevPolls.map((poll) => (poll._id === updatedPoll._id ? updatedPoll : poll))
+       );
+        // Update filteredPolls as well
+       setFilteredPolls((prevPolls) =>
+         prevPolls.map((poll) => (poll._id === updatedPoll._id ? updatedPoll : poll))
+       );
+
+    }
+    catch (error) {
+      console.error('Error bookmarking poll:', error.response?.data || error.message);
     }
   };
 
@@ -118,7 +158,7 @@ const Home = () => {
           ) : (
             filteredPolls.map((poll) => (
               poll && (
-                <div key={poll._id} className="h-auto m-2 border-2 border-gray-100 bg-white rounded-md p-5 shadow-2xl w-full">
+                <div key={poll._id} className="relative h-auto m-2 border-2 border-gray-100 bg-white rounded-md p-5 shadow-2xl w-full">
                   <div className="flex items-center mb-2">
                     <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center font-bold">
                       {poll.createdBy && poll.createdBy.username && poll.createdBy.username.charAt(0)}
@@ -126,6 +166,12 @@ const Home = () => {
                     <div className="ml-3">
                       <p className="font-semibold">{"@" + (poll.createdBy && poll.createdBy.username)}</p>
                       <p className="text-sm text-gray-500">{new Date(poll.createdAt).toLocaleString()}</p>
+                    </div>
+                    <div
+                      className="absolute top-4 right-4 w-4 h-4 transition-transform transform hover:scale-110 cursor-pointer"
+                      onClick={() => handleBookmark(poll._id)}
+                    >
+                      <FaRegBookmark className="w-full h-full text-gray-500 hover:text-blue-500" />
                     </div>
                   </div>
 
@@ -181,6 +227,7 @@ const Home = () => {
                       {poll.options.map((option, index) => (
                         <button key={index} className="w-full text-left border rounded-md py-2 px-4 bg-gray-100" onClick={() => handleVote(poll._id, index)}>
                           {option.text}
+                          {option.showPlusOne && <span className="text-green-500 ml-2">+1</span>} {/* Show "+1" indicator */}
                         </button>
                       ))}
                     </div>
@@ -216,12 +263,23 @@ const Home = () => {
                     </div>
                   )}
 
-                  {poll.pollType === "imagebased" && (
+                  {poll.pollType === "imagebased" && poll.options && (
                     <div className="grid grid-cols-2 gap-2">
                       {poll.images.map((image, index) => (
-                        <button key={index} className="relative w-full h-40 border rounded-md overflow-hidden">
-                          <img src={image} alt={`Option ${index + 1}`} className="w-full h-full object-cover" />
-                        </button>
+                        <div key={index} className="relative w-full h-40 border rounded-md overflow-hidden">
+                          <button
+                            className="relative w-full h-full"
+
+                            onClick={() => handleVote(poll._id, index)}
+                          >
+                            <img src={image} alt={`Option ${index + 1}`} className="w-full h-full object-cover" />
+                            {poll.options[index]?.showPlusOne && (
+                              <span className="absolute top-2 right-2 bg-green-500 text-white text-sm font-bold px-2 py-1 rounded-full">
+                                +1
+                              </span>
+                            )}
+                          </button>
+                        </div>
                       ))}
                     </div>
                   )}

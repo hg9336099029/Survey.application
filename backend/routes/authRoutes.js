@@ -1,6 +1,6 @@
 const express = require('express');
 const { register, login, getuserdetails } = require('../controller/authController');
-const { createPoll, getAllPolls, getUserPolls, deletePoll, voteOnPoll,getVotedPolls } = require('../controller/pollController');
+const { createPoll, getAllPolls, getUserPolls, deletePoll, voteOnPoll, getVotedPolls,bookmarkpoll, getbookmarkedPolls } = require('../controller/pollController');
 const protect = require('../middleware/authmiddleware');
 const upload = require('../middleware/uploadmiddleware');
 const router = express.Router();
@@ -23,7 +23,14 @@ router.delete('/delete-poll/:id', protect, deletePoll);
 // Vote on a poll
 router.patch('/votepoll/:pollId', protect, voteOnPoll);
 
-// get voted polls
-router.get('/getvotedpolls',protect,getVotedPolls);
+// Get voted polls
+router.get('/getvotedpolls', protect, getVotedPolls);
+
+// bookmark a poll
+
+router.post('/bookmarkpoll/:pollId', protect, bookmarkpoll);
+
+// get bookmarked polls
+router.get('/getbookmarkedpolls', protect,getbookmarkedPolls);
 
 module.exports = router;
