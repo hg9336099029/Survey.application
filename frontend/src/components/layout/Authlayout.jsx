@@ -8,7 +8,7 @@ const Authlayout = ({children}) => {
     <div className='flex '>
       {/* left section */}
       <div className="w-full h-screen md:w-1/2 md:h-screen flex flex-col items-center justify-center">
-        <h2 className=' absolute left-0 top-0 text-2xl font-bold text-black mb-8'>POLLING APP</h2>
+        <h2 className=' absolute left-0 top-0 text-2xl font-bold text-black mb-8'>SURVEY SPHERE</h2>
         {children}
       </div>
 
