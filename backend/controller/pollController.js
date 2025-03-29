@@ -22,7 +22,6 @@ const createPoll = async (req, res) => {
 
         // Parse options safely
         const parsedOptions = options ? JSON.parse(options) : [];
-
         const newPoll = new Poll({
             question,
             pollType,
@@ -33,7 +32,9 @@ const createPoll = async (req, res) => {
 
         await newPoll.save();
         res.status(201).json({ message: 'Poll created successfully', poll: newPoll });
-    } catch (error) {
+
+    }
+    catch (error) {
         res.status(500).json({ error: error.message });
     }
 };

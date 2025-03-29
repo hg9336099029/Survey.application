@@ -20,10 +20,12 @@ const userSchema = new mongoose.Schema({
         required: true,
         unique: true,
     },
+
     profileImageUrl: {
         type: String,
         default: ''
     },
+    
     votedPolls: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Poll'
