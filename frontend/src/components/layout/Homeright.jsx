@@ -13,7 +13,7 @@ const Homeright = () => {
     const fetchUserData = async () => {
       try {
         const response = await axiosInstance.get(API_PATH.AUTH.GET_USER);
-        setUser(response.data.user); // Set the entire user object
+        setUser(response.data.user);
       } catch (error) {
         console.error('Error fetching user data:', error);
       }
@@ -39,7 +39,15 @@ const Homeright = () => {
       <div className="relative">
         <img src={uiElements} alt="user" className="w-full h-32 object-cover" />
         <div className="absolute left-1/2 -bottom-10 transform -translate-x-1/2">
-          <img src={img} alt="profile" className="w-20 h-20 rounded-full border-4 border-white" />
+          <img
+            src={user && user.profileImageUrl ? user.profileImageUrl : img}
+            alt="profile"
+            className="w-20 h-20 rounded-full border-4 border-white"
+            onError={(e) => {
+              e.target.onerror = null; // Prevent infinite loop
+              e.target.src = img; 
+            }}
+          />
         </div>
       </div>
       <div className="p-2 mt-14 text-center">
@@ -53,7 +61,7 @@ const Homeright = () => {
           </div>
 
           <div className="text-center">
-            <p className="font-semibold">{user ? user.votedPolls.length :0}</p>
+            <p className="font-semibold">{user ? user.votedPolls.length : 0}</p>
             <p className="text-sm text-gray-500">Polls Voted</p>
           </div>
 
