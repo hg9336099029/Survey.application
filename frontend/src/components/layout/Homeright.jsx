@@ -44,7 +44,7 @@ const Homeright = () => {
             alt="profile"
             className="w-20 h-20 rounded-full border-4 border-white"
             onError={(e) => {
-              e.target.onerror = null; // Prevent infinite loop
+              e.target.onerror = null; 
               e.target.src = img; 
             }}
           />
