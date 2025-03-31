@@ -1,6 +1,6 @@
 const express = require('express');
-const { register, login, getuserdetails } = require('../controller/authController');
-const { createPoll, getAllPolls, getUserPolls, deletePoll, voteOnPoll, getVotedPolls,bookmarkpoll, getbookmarkedPolls } = require('../controller/pollController');
+const { register, login, getuserdetails, logout } = require('../controller/authController');
+const { createPoll, getAllPolls, getUserPolls, deletePoll, voteOnPoll, getVotedPolls, bookmarkpoll, getbookmarkedPolls } = require('../controller/pollController');
 const protect = require('../middleware/authmiddleware');
 const upload = require('../middleware/uploadmiddleware');
 const router = express.Router();
@@ -27,10 +27,12 @@ router.patch('/votepoll/:pollId', protect, voteOnPoll);
 router.get('/getvotedpolls', protect, getVotedPolls);
 
 // bookmark a poll
-
 router.post('/bookmarkpoll/:pollId', protect, bookmarkpoll);
 
 // get bookmarked polls
-router.get('/getbookmarkedpolls', protect,getbookmarkedPolls);
+router.get('/getbookmarkedpolls', protect, getbookmarkedPolls);
+
+// Logout
+router.post('/logout', logout);
 
 module.exports = router;

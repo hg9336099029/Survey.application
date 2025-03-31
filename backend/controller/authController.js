@@ -7,7 +7,7 @@ const Poll = require('../models/poll'); // Ensure Poll model is imported correct
 // Generate JWT token
 const generateToken = (id) => {
     return jwt.sign({ id }, process.env.JWT_SECRET, {
-        expiresIn: '30d'
+        expiresIn: '1d'
     });
 };
 
@@ -58,6 +58,21 @@ const login = async (req, res) => {
     }
 };
 
+const logout = async (req, res) => {
+    try {
+        // Clear the token from cookies (if using cookies for authentication)
+        res.clearCookie('token', {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production', // Use secure cookies in production
+            sameSite: 'strict',
+        });
+
+        res.status(200).json({ message: 'Logged out successfully' });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
 const getuserdetails = async (req, res) => {
     try {
         const user = await User.findById(req.user._id).select('-password');
@@ -70,4 +85,4 @@ const getuserdetails = async (req, res) => {
     }
 };
 
-module.exports = { register, login,getuserdetails};
+module.exports = { register, login, getuserdetails, logout };
