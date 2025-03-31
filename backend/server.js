@@ -19,13 +19,20 @@ if (!fs.existsSync(uploadsDir)) {
 }
 
 const app = express();
-const port = process.env.PORT || 8000;
+const port = process.env.PORT || 8000; // Use Render's dynamic port
+
 // Middleware
 app.use(cors());
 app.use(express.json());
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
 // Routes
 app.use('/api/v1/auth', authRoutes);
+
+// Health check endpoint for Render
+app.get('/health', (req, res) => {
+  res.status(200).send('OK');
+});
 
 // Start the server
 app.listen(port, () => {
