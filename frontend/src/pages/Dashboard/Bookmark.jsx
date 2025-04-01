@@ -84,20 +84,19 @@ const Bookmark = () => {
               poll && (
                 <div key={poll._id} className="relative h-auto m-2 border-2 border-gray-100 bg-white rounded-md p-5 shadow-2xl w-full">
                   <div className="flex items-center mb-2">
-                                      <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center font-bold">
-                                        {poll.createdBy && poll.createdBy.username && poll.createdBy.username.charAt(0)}
-                                      </div>
-                                      <div className="ml-3">
-                                        <p className="font-semibold">{"@" + (poll.createdBy && poll.createdBy.username)}</p>
-                                        <p className="text-sm text-gray-500">{new Date(poll.createdAt).toLocaleString()}</p>
-                                      </div>
-                                      <div
-                                        className="absolute top-4 right-4 w-4 h-4 transition-transform transform hover:scale-110 cursor-pointer"
-                                        onClick={() => handleBookmark(poll._id)}
-                                      >
-                                        <FaRegBookmark className="w-full h-full text-gray-500 hover:text-blue-500" />
-                                      </div>
-                                    </div>
+                    <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center font-bold">
+                      {poll.createdBy && poll.createdBy.username && poll.createdBy.username.charAt(0)}
+                    </div>
+                    <div className="ml-3">
+                      <p className="font-semibold">{"@" + (poll.createdBy && poll.createdBy.username)}</p>
+                      <p className="text-sm text-gray-500">{new Date(poll.createdAt).toLocaleString()}</p>
+                    </div>
+                    <div
+                      className="absolute top-4 right-4 w-6 h-6 transition-transform transform hover:scale-110 cursor-pointer"
+                    >
+                      <FaRegBookmark className="w-full h-full text-blue-500" />
+                    </div>
+                  </div>
 
                   <p className="font-medium text-lg mb-2">{poll.question}</p>
 
