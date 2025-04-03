@@ -20,6 +20,14 @@ const Homeleft = () => {
 
   const isActive = (path) => location.pathname === path; // Check if the route matches
 
+  const handleLogout = () => {
+    // Clear the token from localStorage or sessionStorage
+    localStorage.removeItem('token');
+
+    // Redirect to login page
+    window.location.href = '/login';
+  };
+
   return (
     <>
       {/* Desktop Sidebar (fixed width on medium screens) */}
@@ -74,15 +82,13 @@ const Homeleft = () => {
           <span className="md:text-sm lg:text-base whitespace-nowrap flex items-center">My Polls</span>
         </Link>
 
-        <Link
-          to="/login"
-          className={`flex items-center gap-4 justify-start w-full px-4 md:px-6 lg:px-10 rounded-full py-4 cursor-pointer ${
-            isActive('/login') ? 'bg-sky-300 text-white' : 'hover:bg-sky-300 hover:text-white'
-          }`}
+        <button
+          onClick={handleLogout}
+          className="flex items-center gap-4 justify-start w-full px-4 md:px-6 lg:px-10 rounded-full py-4 cursor-pointer hover:bg-sky-300 hover:text-white"
         >
           <FiLogOut className="min-w-[20px] md:text-lg lg:text-xl flex-shrink-0" />
           <span className="md:text-sm lg:text-base whitespace-nowrap flex items-center">Logout</span>
-        </Link>
+        </button>
       </div>
     </>
   );

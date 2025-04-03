@@ -7,6 +7,7 @@ import { API_PATH } from '../../utils/apipath';
 const Homeright = () => {
   const [user, setUser] = useState(null);
   const [pollsCreated, setPollsCreated] = useState(0);
+  const [trendingPolls, setTrendingPolls] = useState([]);
 
   useEffect(() => {
     // Fetch user data
@@ -29,8 +30,19 @@ const Homeright = () => {
       }
     };
 
+    // Fetch trending polls
+    const fetchTrendingPolls = async () => {
+      try {
+        const response = await axiosInstance.get(API_PATH.AUTH.TRENDING_POLLS);
+        setTrendingPolls(response.data.trendingPolls);
+      } catch (error) {
+        console.error('Error fetching trending polls:', error);
+      }
+    };
+
     fetchUserData();
     fetchUserPolls();
+    fetchTrendingPolls();
   }, []);
 
   return (
@@ -44,8 +56,8 @@ const Homeright = () => {
             alt="profile"
             className="w-20 h-20 rounded-full border-4 border-white"
             onError={(e) => {
-              e.target.onerror = null; 
-              e.target.src = img; 
+              e.target.onerror = null;
+              e.target.src = img;
             }}
           />
         </div>
@@ -73,23 +85,17 @@ const Homeright = () => {
 
         <div className="mt-16 px-6 py-6">
           <h4 className="text-left font-semibold mb-4">Trending</h4>
-          <div className="flex flex-col space-y-2">
-            <div className="flex justify-between text-sm">
-              <span className="text-gray-600">Single Choice</span>
-              <span>17</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-gray-600">Yes/No</span>
-              <span>10</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-gray-600">Rating</span>
-              <span>10</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-gray-600">Image Based</span>
-              <span>9</span>
-            </div>
+          <div className="flex flex-col space-y-4">
+            {trendingPolls.length > 0 ? (
+              trendingPolls.map((poll) => (
+                <div key={poll._id} className="text-sm flex-col space-y-2 bg-gray-100 p-4 rounded-lg shadow-md">
+                  <h1 className="font-bold text-gray-700 text-base">{poll._id}</h1>
+                  <p className="text-gray-500 mt-1">Total Votes: {poll.totalVotes}</p>
+                </div>
+              ))
+            ) : (
+              <p className="text-gray-500">No trending polls available</p>
+            )}
           </div>
         </div>
       </div>

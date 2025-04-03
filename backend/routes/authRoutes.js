@@ -5,7 +5,9 @@ const protect = require('../middleware/authmiddleware');
 const upload = require('../middleware/uploadmiddleware');
 const router = express.Router();
 router.post('/register', register);
+
 router.post('/login', login);
+
 router.get('/getuser', protect, getuserdetails);
 
 // Create Poll API with image upload
