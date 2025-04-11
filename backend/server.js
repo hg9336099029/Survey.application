@@ -20,12 +20,23 @@ if (!fs.existsSync(uploadsDir)) {
 
 const app = express();
 const port = process.env.PORT || 8000;
+
 // Middleware
 app.use(cors());
 app.use(express.json());
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
 // Routes
 app.use('/api/v1/auth', authRoutes);
+
+// Serve frontend static files
+const frontendPath = path.join(__dirname, '../frontend/dist');
+app.use(express.static(frontendPath));
+
+// Handle SPA routing
+app.get('*', (req, res) => {
+  res.sendFile(path.join(frontendPath, 'index.html'));
+});
 
 // Start the server
 app.listen(port, () => {
