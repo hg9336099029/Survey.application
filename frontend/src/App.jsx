@@ -15,24 +15,28 @@ import SignUp from './pages/Auth/SignUpForm';
 import VotedPolls from './pages/Dashboard/VotedPolls';
 
 const App = () => {
-  const isAuthenticated = !!localStorage.getItem('token');
+  const isAuthenticated = !!localStorage.getItem('accessToken');
+
+  const setAccessToken = (token) => {
+    localStorage.setItem("accessToken", token);
+  };
 
   return (
     <div>
-    <UserProvider>
-      <Router>
-        <Routes>
-          <Route path="/" element={isAuthenticated ? <Navigate to="/dashboard"/> : <Navigate to="/login" />} />
-          <Route path="/login" element={<Login/>} />
-          <Route path="/signup" element={<SignUp/>} />
-          <Route path="/dashboard" exact element={<Home/>} />
-          <Route path="/bookmark" exact element={<Bookmark />} />
-          <Route path="/create-poll" exact element={<CreatePoll/>} />
-          <Route path="/Voted-polls" exact element={<VotedPolls/>} />
-          <Route path="/mypolls" exact element={<Mypolls/>}/>
-        </Routes>
-      </Router>
-    </UserProvider>
+      <UserProvider>
+        <Router>
+          <Routes>
+            <Route path="/" element={isAuthenticated ? <Navigate to="/dashboard" /> : <Navigate to="/login" />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<SignUp />} />
+            <Route path="/dashboard" exact element={<Home />} />
+            <Route path="/bookmark" exact element={<Bookmark />} />
+            <Route path="/create-poll" exact element={<CreatePoll />} />
+            <Route path="/Voted-polls" exact element={<VotedPolls />} />
+            <Route path="/mypolls" exact element={<Mypolls />} />
+          </Routes>
+        </Router>
+      </UserProvider>
     </div>
   )
 }

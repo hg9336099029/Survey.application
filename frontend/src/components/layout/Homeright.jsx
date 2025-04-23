@@ -34,7 +34,8 @@ const Homeright = () => {
     const fetchTrendingPolls = async () => {
       try {
         const response = await axiosInstance.get(API_PATH.AUTH.TRENDING_POLLS);
-        setTrendingPolls(response.data.trendingPolls);
+        // Set fallback to an empty array if undefined
+        setTrendingPolls(response.data.trendingPolls || []);
       } catch (error) {
         console.error('Error fetching trending polls:', error);
       }
@@ -71,25 +72,23 @@ const Homeright = () => {
             <p className="font-semibold">{pollsCreated}</p>
             <p className="text-sm text-gray-500">Polls Created</p>
           </div>
-
-          <div className="text-center">
-            <p className="font-semibold">{user ? user.votedPolls.length : 0}</p>
-            <p className="text-sm text-gray-500">Polls Voted</p>
-          </div>
-
-          <div className="text-center">
-            <p className="font-semibold">{user ? user.bookmarkedPolls.length : 0}</p>
-            <p className="text-sm text-gray-500">Polls Bookmarked</p>
-          </div>
+          {/* other user data */}
         </div>
 
         <div className="mt-16 px-6 py-6">
           <h4 className="text-left font-semibold mb-4">Trending</h4>
           <div className="flex flex-col space-y-4">
-            {trendingPolls.length > 0 ? (
+            {(trendingPolls && trendingPolls.length > 0) ? (
               trendingPolls.map((poll) => (
-                <div key={poll._id} className="text-sm flex-col space-y-2 bg-gray-100 p-4 rounded-lg shadow-md">
-                  <h1 className="font-bold text-gray-700 text-base">{poll._id}</h1>
+                <div key={poll._id} className="text-sm">
+                  <h5 className="font-semibold text-gray-700">{poll._id}</h5>
+                  <ul className="ml-4 list-disc">
+                    {poll.options.map((option, index) => (
+                      <li key={index} className="text-gray-600">
+                        {option.optionText}: {option.votes} votes
+                      </li>
+                    ))}
+                  </ul>
                   <p className="text-gray-500 mt-1">Total Votes: {poll.totalVotes}</p>
                 </div>
               ))

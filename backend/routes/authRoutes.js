@@ -4,6 +4,7 @@ const { createPoll, getAllPolls, getUserPolls, deletePoll, voteOnPoll, getVotedP
 const protect = require('../middleware/authmiddleware');
 const upload = require('../middleware/uploadmiddleware');
 const router = express.Router();
+
 router.post('/register', register);
 router.post('/login', login);
 
