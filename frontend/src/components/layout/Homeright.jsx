@@ -48,7 +48,7 @@ const Homeright = () => {
 
   return (
     <div className="w-full h-[50%] shadow-lg border-2 border-gray-200 rounded-lg">
-      {/* for user profile */}
+      {/* User Profile */}
       <div className="relative">
         <img src={uiElements} alt="user" className="w-full h-32 object-cover" />
         <div className="absolute left-1/2 -bottom-10 transform -translate-x-1/2">
@@ -67,14 +67,23 @@ const Homeright = () => {
         <h3 className="font-semibold text-lg">{user ? user.fullname : 'Loading...'}</h3>
         <p className="text-gray-500">@{user ? user.username : 'Loading...'}</p>
 
+        {/* Display User's Polls Created, Voted and Bookmarked */}
         <div className="flex justify-center space-x-4">
           <div className="text-center">
             <p className="font-semibold">{pollsCreated}</p>
             <p className="text-sm text-gray-500">Polls Created</p>
           </div>
-          {/* other user data */}
+          <div className="text-center">
+            <p className="font-semibold">{user ? user.votedPolls.length : 0}</p>
+            <p className="text-sm text-gray-500">Polls Voted</p>
+          </div>
+          <div className="text-center">
+            <p className="font-semibold">{user ? user.bookmarkedPolls.length : 0}</p>
+            <p className="text-sm text-gray-500">Polls Bookmarked</p>
+          </div>
         </div>
 
+        {/* Trending Polls */}
         <div className="mt-16 px-6 py-6">
           <h4 className="text-left font-semibold mb-4">Trending</h4>
           <div className="flex flex-col space-y-4">

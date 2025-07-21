@@ -13,7 +13,7 @@ const CreatePoll = () => {
   // Validate form data
   const validateForm = () => {
     const newErrors = {};
-
+    
     if (!question.trim()) newErrors.question = "Question is required.";
     if (!selectedButton) newErrors.pollType = "Poll type must be selected.";
 
