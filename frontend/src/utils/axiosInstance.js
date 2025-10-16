@@ -5,7 +5,7 @@ import { API_PATH } from './apipath';
 // Default axios instance
 // ===================
 export const axiosInstance = axios.create({
-    baseURL: 'http://localhost:8000', // or your backend URL
+    baseURL: 'http://localhost:8000'|| "https://survey-application-44on.onrender.com", // or your backend URL
     timeout: 5000, // Increase timeout to 5000ms (5 seconds)
     headers: {
         "Content-Type": "application/json",

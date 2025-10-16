@@ -1,8 +1,6 @@
 // Detect environment and set base URL accordingly
-const BASE_URL = process.env.REACT_APP_API_URL || 
-  (typeof window !== 'undefined' && window.location.hostname === 'localhost' 
-    ? 'http://localhost:8000'
-    : 'https://your-render-backend.onrender.com');
+const BASE_URL = 'http://localhost:8000'|| 
+'https://survey-application-44on.onrender.com';
 
 export const API_PATH = {
     AUTH: {
