@@ -22,7 +22,7 @@ const port = process.env.PORT || 8000;
 const allowedOrigins = [
   'http://localhost:3000',
   'http://localhost:5173',
-  process.env.FRONTEND_URL || 'https://survey-application-4y2b.vercel.app/'
+  process.env.FRONTEND_URL || 'https://survey-application-izg5.vercel.app/'
 ];
 
 app.use(cors({
