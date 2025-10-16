@@ -1,10 +1,12 @@
 services:
   - type: web
-    name: survey-sphere-api
+    name: survey-sphere-backend
     env: node
     plan: free
-    buildCommand: cd backend && npm install
+    
+    buildCommand: cd backend && npm install --legacy-peer-deps
     startCommand: cd backend && npm start
+    
     envVars:
       - key: MONGO_URL
         sync: false
@@ -12,3 +14,9 @@ services:
         sync: false
       - key: NODE_ENV
         value: production
+      - key: FRONTEND_URL
+        sync: false
+      - key: PORT
+        value: 8000
+    
+    autoDeploy: true
