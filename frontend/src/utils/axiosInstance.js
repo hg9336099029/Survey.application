@@ -6,7 +6,7 @@ import { API_PATH } from './apipath';
 // ===================
 export const axiosInstance = axios.create({
     baseURL: 'http://localhost:8000'|| "https://survey-application-44on.onrender.com", // or your backend URL
-    timeout: 5000, // Increase timeout to 5000ms (5 seconds)
+    timeout: 10000, // Increase timeout to 5000ms (5 seconds)
     headers: {
         "Content-Type": "application/json",
         "Accept": "application/json",

@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import {
   BrowserRouter as Router,
   Routes,
@@ -17,23 +17,46 @@ import VotedPolls from './pages/Dashboard/VotedPolls';
 const App = () => {
   const isAuthenticated = !!localStorage.getItem('accessToken');
 
-  const setAccessToken = (token) => {
-    localStorage.setItem("accessToken", token);
-  };
+  useEffect(() => {
+    // Check if token exists and is valid
+    const token = localStorage.getItem('accessToken');
+    if (!token) {
+      localStorage.removeItem('user');
+    }
+  }, []);
 
   return (
     <div>
       <UserProvider>
         <Router>
           <Routes>
-            <Route path="/" element={isAuthenticated ? <Navigate to="/dashboard" /> : <Navigate to="/login" />} />
+            <Route 
+              path="/" 
+              element={isAuthenticated ? <Navigate to="/dashboard" /> : <Navigate to="/login" />} 
+            />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<SignUp />} />
-            <Route path="/dashboard" exact element={<Home />} />
-            <Route path="/bookmark" exact element={<Bookmark />} />
-            <Route path="/create-poll" exact element={<CreatePoll />} />
-            <Route path="/Voted-polls" exact element={<VotedPolls />} />
-            <Route path="/mypolls" exact element={<Mypolls />} />
+            <Route 
+              path="/dashboard" 
+              element={isAuthenticated ? <Home /> : <Navigate to="/login" />} 
+            />
+            <Route 
+              path="/bookmark" 
+              element={isAuthenticated ? <Bookmark /> : <Navigate to="/login" />} 
+            />
+            <Route 
+              path="/create-poll" 
+              element={isAuthenticated ? <CreatePoll /> : <Navigate to="/login" />} 
+            />
+            <Route 
+              path="/Voted-polls" 
+              element={isAuthenticated ? <VotedPolls /> : <Navigate to="/login" />} 
+            />
+            <Route 
+              path="/mypolls" 
+              element={isAuthenticated ? <Mypolls /> : <Navigate to="/login" />} 
+            />
+            <Route path="*" element={<Navigate to="/" />} />
           </Routes>
         </Router>
       </UserProvider>
