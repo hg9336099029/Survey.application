@@ -48,7 +48,19 @@ const allowedOrigins = [
   process.env.FRONTEND_URL || 'https://survey-application-beta.vercel.app/'
 ];
 
-app.use(cors());
+app.use(cors({
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('CORS not allowed'));
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  maxAge: 86400
+}));
 
 // Body parser with size limits
 app.use(express.json({ limit: '10mb' }));
