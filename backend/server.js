@@ -45,22 +45,10 @@ app.use(mongoSanitize());
 const allowedOrigins = [
   'http://localhost:3000',
   'http://localhost:5173',
-  process.env.FRONTEND_URL || 'https://survey-application-flax.vercel.app'
+  process.env.FRONTEND_URL || 'https://survey-application-beta.vercel.app/'
 ];
 
-app.use(cors({
-  origin: (origin, callback) => {
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error('CORS not allowed'));
-    }
-  },
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-  maxAge: 86400
-}));
+app.use(cors());
 
 // Body parser with size limits
 app.use(express.json({ limit: '10mb' }));
