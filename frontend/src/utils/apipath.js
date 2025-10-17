@@ -13,6 +13,7 @@ export const API_PATH = {
     GET_VOTED_POLLS: `${BASE_URL}/api/v1/auth/getvotedpolls`,
     BOOKMARK_POLL: `${BASE_URL}/api/v1/auth/bookmarkpoll`,
     GET_BOOOKMARK_POLLS: `${BASE_URL}/api/v1/auth/getbookmarkedpolls`,
+    TRENDING_POLLS: `${BASE_URL}/api/v1/auth/trendingpolls`, // If needed
   },
   IMAGE: {
     UPLOAD: `${BASE_URL}/api/v1/image/upload-image`,

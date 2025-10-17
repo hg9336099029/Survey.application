@@ -2,6 +2,8 @@ import axios from 'axios';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
+console.log('API URL:', API_URL); // Debug log
+
 export const axiosInstance = axios.create({
   baseURL: API_URL,
   timeout: 10000,
@@ -32,6 +34,10 @@ axiosInstance.interceptors.response.use(
       localStorage.removeItem('accessToken');
       localStorage.removeItem('user');
       window.location.href = '/login';
+    }
+    // Log CORS errors
+    if (error.message === 'Network Error' && !error.response) {
+      console.error('CORS or Network Error:', error);
     }
     return Promise.reject(error);
   }
