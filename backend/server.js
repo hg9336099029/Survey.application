@@ -45,23 +45,27 @@ app.use(mongoSanitize());
 const allowedOrigins = [
   'http://localhost:3000',
   'http://localhost:5173',
-  process.env.FRONTEND_URL || 'https://survey-application-beta.vercel.app/'
+  'https://survey-application-beta.vercel.app'
 ];
 
 app.use(cors({
-  origin: (origin, callback) => {
+  origin: function(origin, callback) {
     if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
-      callback(new Error('CORS not allowed'));
+      callback(null, false); // disable request if not allowed
     }
   },
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-  maxAge: 86400
+  methods: ['GET','POST','PUT','PATCH','DELETE','OPTIONS'],
+  allowedHeaders: ['Content-Type','Authorization'],
 }));
 
+// Handle preflight OPTIONS requests
+app.options('*', cors({
+  origin: allowedOrigins,
+  credentials: true,
+}));
 // Body parser with size limits
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ limit: '10mb', extended: true }));
@@ -105,7 +109,7 @@ app.use((err, req, res, next) => {
   }
 
   res.status(err.status || 500).json({
-    message: process.env.NODE_ENV === 'development' 
+    message: process.env.NODE_ENV === 'production' 
       ? 'Internal server error' 
       : err.message
   });
