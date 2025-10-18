@@ -20,7 +20,7 @@ app.set('trust proxy', 1);
 // Security headers
 app.use(helmet());
 
-// Rate limiting
+// General rate limiting for all requests
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 100, // Limit each IP to 100 requests per windowMs
@@ -29,11 +29,16 @@ const limiter = rateLimit({
   legacyHeaders: false,
 });
 
+// Strict rate limiting for auth endpoints (login/register only)
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 5, // Limit login attempts
+  max: 5, // Limit login/register attempts
   skipSuccessfulRequests: true,
   message: 'Too many login attempts, please try again later.',
+  keyGenerator: (req, res) => {
+    // Use email as the key for login/register to limit per-user attempts
+    return req.body.email || req.ip;
+  }
 });
 
 app.use(limiter);
@@ -66,6 +71,7 @@ app.options('*', cors({
   origin: allowedOrigins,
   credentials: true,
 }));
+
 // Body parser with size limits
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ limit: '10mb', extended: true }));
@@ -87,8 +93,12 @@ if (!fs.existsSync(uploadsDir)) {
 
 const port = process.env.PORT || 8000;
 
-// API Routes with auth limiter
-app.use('/api/v1/auth', authLimiter, authRoutes);
+// Apply auth limiter only to login and register routes
+app.post('/api/v1/auth/login', authLimiter);
+app.post('/api/v1/auth/register', authLimiter);
+
+// API Routes (without the authLimiter applied to all routes)
+app.use('/api/v1/auth', authRoutes);
 
 // Health check endpoint for Render
 app.get('/health', (req, res) => {

@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: survey-sphere-backend
+    name: backend
     env: node
     plan: starter
     
