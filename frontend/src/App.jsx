@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import UserProvider from './context/userContext';
 import SignUpForm from './pages/Auth/SignUpForm';
 import Login from './pages/Auth/loginForm';
+import Dashboard from './pages/Dashboard/Dashboard';
 import Home from './pages/Dashboard/Home';
 import CreatePoll from './pages/Dashboard/CreatePoll';
 import Mypolls from './pages/Dashboard/Mypolls';
@@ -36,6 +37,14 @@ function App() {
           {/* Protected Dashboard Routes */}
           <Route 
             path="/dashboard" 
+            element={
+              <ProtectedRoute>
+                <Dashboard />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/home" 
             element={
               <ProtectedRoute>
                 <Home />
