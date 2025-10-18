@@ -3,67 +3,57 @@ import { DashboardLayout } from '../../components/layout/dashboardLayout';
 import FilterDropdown from '../../components/layout/filter';
 import { axiosInstance } from '../../utils/axiosInstance';
 import { API_PATH } from '../../utils/apipath';
-import delete_icon from '../../assets/images/delete.png';
+import { toast } from 'react-toastify';
 
-const Mypolls = () => {
-  // State to store all polls
+const MyPolls = () => {
   const [polls, setPolls] = useState([]);
-  // State to store filtered polls based on the selected filter
   const [filteredPolls, setFilteredPolls] = useState([]);
-  // State to store the currently selected filter
   const [selectedFilter, setSelectedFilter] = useState('All-polls');
-  // State to manage the visibility of the delete confirmation modal
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  // State to store the poll to be deleted
   const [pollToDelete, setPollToDelete] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  // useEffect hook to fetch polls when the component mounts
   useEffect(() => {
-    // Fetch polls from the backend
-    const fetchPolls = async () => {
-      try {
-        const response = await axiosInstance.get(API_PATH.AUTH.GET_USERPOLLS);
-        const fetchedPolls = response.data.polls;
-        // Set the fetched polls to the polls state
-        setPolls(fetchedPolls);
-        // Initially, set the filtered polls to be the same as all polls
-        setFilteredPolls(fetchedPolls);
-      } catch (error) {
-        console.error('Error fetching polls:', error);
-      }
-    };
-
     fetchPolls();
   }, []);
 
-  // Function to handle filter selection
-  const handleFilterSelect = (filter) => {
-    // Update the selected filter state
-    setSelectedFilter(filter);
-    // Filter the polls based on the selected filter
-    if (filter === "Yes/No") {
-      setFilteredPolls(polls.filter(poll => poll.pollType === "yesno"));
-    } else if (filter === "Single choice") {
-      setFilteredPolls(polls.filter(poll => poll.pollType === "single choice"));
-    } else if (filter === "Rating") {
-      setFilteredPolls(polls.filter(poll => poll.pollType === "rating"));
-    } else if (filter === "Image-based") {
-      setFilteredPolls(polls.filter(poll => poll.pollType === "imagebased"));
-    } else if (filter === "Open-Ended") {
-      setFilteredPolls(polls.filter(poll => poll.pollType === "open ended"));
-    } else {
-      // If no specific filter is selected, show all polls
-      setFilteredPolls(polls);
+  const fetchPolls = async () => {
+    try {
+      setLoading(true);
+      const response = await axiosInstance.get(API_PATH.AUTH.GET_USERPOLLS);
+      const fetchedPolls = response.data.polls || [];
+      setPolls(fetchedPolls);
+      setFilteredPolls(fetchedPolls);
+    } catch (error) {
+      console.error('Error fetching polls:', error);
+      toast.error('Failed to load polls');
+    } finally {
+      setLoading(false);
     }
   };
 
-  // Function to handle delete button click
+  const handleFilterSelect = (filter) => {
+    setSelectedFilter(filter);
+    if (filter === 'All-polls') {
+      setFilteredPolls(polls);
+    } else {
+      const typeMap = {
+        'Yes/No': 'yesno',
+        'Single choice': 'single choice',
+        'Rating': 'rating',
+        'Image-based': 'imagebased',
+        'Open-Ended': 'open ended',
+      };
+      const filterType = typeMap[filter];
+      setFilteredPolls(polls.filter(poll => poll.pollType === filterType));
+    }
+  };
+
   const handleDeleteClick = (poll) => {
     setPollToDelete(poll);
     setShowDeleteModal(true);
   };
 
-  // Function to handle delete confirmation
   const handleDeleteConfirm = async () => {
     try {
       await axiosInstance.delete(`${API_PATH.AUTH.DELETE_POLL}/${pollToDelete._id}`);
@@ -71,143 +61,158 @@ const Mypolls = () => {
       setFilteredPolls(filteredPolls.filter(poll => poll._id !== pollToDelete._id));
       setShowDeleteModal(false);
       setPollToDelete(null);
-    }
-    catch (error) {
-      console.error('Error deleting poll:', error);
+      toast.success('Poll deleted successfully');
+    } catch (error) {
+      toast.error('Failed to delete poll');
     }
   };
 
-  // Function to handle delete cancellation
-  const handleDeleteCancel = () => {
-    setShowDeleteModal(false);
-    setPollToDelete(null);
+  const getTotalVotes = (poll) => {
+    return poll.options.reduce((sum, opt) => sum + opt.votes, 0);
   };
+
+  const getVotePercentage = (votes, total) => {
+    return total > 0 ? ((votes / total) * 100).toFixed(1) : 0;
+  };
+
+  if (loading) {
+    return (
+      <DashboardLayout>
+        <div className="flex items-center justify-center h-screen">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading your polls...</p>
+          </div>
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout>
-      <div className="flex-1 flex-col items-center justify-center mx-auto w-screen sm:w-full">
-        {/* Pass the handleFilterSelect function to the FilterDropdown component */}
-        <FilterDropdown onFilterSelect={handleFilterSelect} />
-        <div className="flex flex-col mt-4 mx-auto w-full">
-          {polls.length === 0 ? (
-            <p className="text-center text-gray-500">No poll exists</p>
+      <div className="flex-1 overflow-auto bg-gradient-to-br from-gray-50 to-gray-100 p-6">
+        <div className="max-w-6xl mx-auto">
+          {/* Header */}
+          <div className="mb-8">
+            <h1 className="text-4xl font-bold text-gray-900">My Polls</h1>
+            <p className="text-gray-600 mt-2">Manage and monitor your polls • {polls.length} total</p>
+          </div>
+
+          {/* Filter */}
+          <div className="mb-8">
+            <FilterDropdown onFilterSelect={handleFilterSelect} />
+          </div>
+
+          {/* Polls */}
+          {filteredPolls.length === 0 ? (
+            <div className="text-center py-16 bg-white rounded-xl border border-gray-200">
+              <svg className="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              <p className="text-gray-600 text-lg">No polls found</p>
+              <p className="text-gray-500">Start by creating a new poll</p>
+            </div>
           ) : (
-            filteredPolls.map((poll) => (
-              <div key={poll._id} className="relative h-auto m-2 border-2 border-gray-100 bg-white rounded-md p-5 shadow-2xl w-full">
-                <div className="flex items-center mb-2">
-                  <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center font-bold">
-                    {poll.createdBy && poll.createdBy.username && poll.createdBy.username.charAt(0)}
-                  </div>
-                  <div className="ml-3">
-                    <p className="font-semibold">{"@" + (poll.createdBy && poll.createdBy.username)}</p>
-                    <p className="text-sm text-gray-500">{new Date(poll.createdAt).toLocaleString()}</p>
-                  </div>
-                  <div
-                    className="absolute top-4 right-4 w-4 h-4 transition-transform transform hover:scale-110 cursor-pointer"
-                    onClick={() => handleDeleteClick(poll)}
-                  >
-                    <img src={delete_icon} alt="Delete" className="w-full h-full" />
-                  </div>
-                </div>
-
-                <p className="font-medium text-lg mb-2">{poll.question}</p>
-
-                {poll.pollType === "yesno" && (
-                  <div className="space-y-2">
-
-                    <div className="flex items-center mb-4">
-                      <input disabled id="disabled-radio-1" type="radio" value="" name="disabled-radio" className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600 cursor-pointer" />
-                      <label htmlFor="disabled-radio-1" className="ms-2 text-sm font-medium text-gray-400 dark:text-gray-500">Yes</label>
-                    </div>
-
-                    <div className="flex items-center">
-                      <input disabled checked id="disabled-radio-2" type="radio" value="" name="disabled-radio" className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600 cursor-pointer" />
-                      <label htmlFor="disabled-radio-2" className="ms-2 text-sm font-medium text-gray-400 dark:text-gray-500">No</label>
-                    </div>
-                  </div>
-                )}
-
-                {poll.pollType === "rating" && (
-                  <div className="space-y-2">
-                    <div className="flex items-center mb-2">
-                      {[...Array(5)].map((_, index) => (
-                        <svg
-                          key={index}
-                          className={`w-4 h-4 ${index < poll.rating ? 'text-yellow-300' : 'text-gray-300'} me-1 cursor-pointer`}
-                          aria-hidden="true"
-                          xmlns="http://www.w3.org/2000/svg"
-                          fill="currentColor"
-                          viewBox="0 0 22 20"
-                        >
-                        <path d="M20.924 7.625a1.523 1.523 0 0 0-1.238-1.044l-5.051-.734-2.259-4.577a1.534 1.534 0 0 0-2.752 0L7.365 5.847l-5.051.734A1.535 1.535 0 0 0 1.463 9.2l3.656 3.563-.863 5.031a1.532 1.532 0 0 0 2.226 1.616L11 17.033l4.518 2.375a1.534 1.534 0 0 0 2.226-1.617l-.863-5.03L20.537 9.2a1.523 1.523 0 0 0 .387-1.575Z"/>
+            <div className="grid grid-cols-1 gap-6">
+              {filteredPolls.map((poll) => {
+                const totalVotes = getTotalVotes(poll);
+                return (
+                  <div key={poll._id} className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-shadow border border-gray-200">
+                    {/* Poll Header */}
+                    <div className="p-6 border-b border-gray-200 flex items-start justify-between">
+                      <div className="flex-1">
+                        <h3 className="text-xl font-bold text-gray-900 mb-2">{poll.question}</h3>
+                        <div className="flex gap-3 flex-wrap">
+                          <span className="inline-block px-3 py-1 bg-blue-100 text-blue-800 text-xs font-semibold rounded-full">
+                            {poll.pollType.charAt(0).toUpperCase() + poll.pollType.slice(1)}
+                          </span>
+                          <span className="inline-block px-3 py-1 bg-green-100 text-green-800 text-xs font-semibold rounded-full">
+                            {totalVotes} votes
+                          </span>
+                          <span className="inline-block px-3 py-1 bg-purple-100 text-purple-800 text-xs font-semibold rounded-full">
+                            {poll.options.length} options
+                          </span>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => handleDeleteClick(poll)}
+                        className="ml-4 p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                      >
+                        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
                         </svg>
-                      ))}
+                      </button>
+                    </div>
 
-                      <p className="ms-1 text-sm font-medium text-gray-500 dark:text-gray-400">{poll.rating}</p>
-                      <p className="ms-1 text-sm font-medium text-gray-500 dark:text-gray-400">out of</p>
-                      <p className="ms-1 text-sm font-medium text-gray-500 dark:text-gray-400">5</p>
-                      
+                    {/* Poll Stats */}
+                    <div className="p-6 bg-gradient-to-r from-gray-50 to-white border-b border-gray-200">
+                      <p className="text-sm text-gray-600 mb-4">Created {new Date(poll.createdAt).toLocaleDateString()}</p>
+                      <div className="grid grid-cols-3 gap-4">
+                        <div>
+                          <p className="text-2xl font-bold text-blue-600">{totalVotes}</p>
+                          <p className="text-xs text-gray-600">Total Votes</p>
+                        </div>
+                        <div>
+                          <p className="text-2xl font-bold text-purple-600">{poll.options.length}</p>
+                          <p className="text-xs text-gray-600">Options</p>
+                        </div>
+                        <div>
+                          <p className="text-2xl font-bold text-green-600">{poll.voters?.length || 0}</p>
+                          <p className="text-xs text-gray-600">Participants</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Options */}
+                    <div className="p-6 space-y-3">
+                      {poll.options.map((option, idx) => (
+                        <div key={idx} className="space-y-1">
+                          <div className="flex justify-between items-center mb-1">
+                            <span className="font-medium text-gray-900">{option.text}</span>
+                            <span className="text-sm text-gray-600 font-bold">{option.votes} ({getVotePercentage(option.votes, totalVotes)}%)</span>
+                          </div>
+                          <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+                            <div
+                              className="bg-gradient-to-r from-blue-500 to-purple-600 h-full transition-all duration-300"
+                              style={{ width: `${getVotePercentage(option.votes, totalVotes)}%` }}
+                            ></div>
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   </div>
-                )}
+                );
+              })}
+            </div>
+          )}
 
-
-                {poll.pollType === "single choice" && (
-                  <div className="space-y-2">
-                    {poll.options.map((option, index) => (
-                      <button key={index} className="w-full text-left border rounded-md py-2 px-4 bg-gray-100">
-                        {option.text}
-                      </button>
-                    ))}
-                  </div>
-                )}
-
-                {poll.pollType === "open ended" && (
-                  <div className="h-auto space-y-2">
-                    <textarea name="" id="" placeholder='please comment here' className='flex flex-col justify-center items-center w-1/2 h-auto bg-slate-50 border-2 border-gray-200 rounded-xl p-2'></textarea>
-                  </div>
-                )}
-
-                {poll.pollType === "imagebased" && (
-                  <div className="grid grid-cols-2 gap-2">
-                    {poll.images.map((image, index) => (
-                      <button key={index} className="relative w-full h-40 border rounded-md overflow-hidden">
-                        <img src={image} alt={`Option ${index + 1}`} className="w-full h-full object-cover" />
-                      </button>
-                    ))}
-                  </div>
-                )}
+          {/* Delete Modal */}
+          {showDeleteModal && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+              <div className="bg-white rounded-xl shadow-xl p-6 max-w-sm w-full mx-4">
+                <h3 className="text-lg font-bold text-gray-900 mb-2">Delete Poll?</h3>
+                <p className="text-gray-600 mb-6">This action cannot be undone. All votes will be lost.</p>
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => setShowDeleteModal(false)}
+                    className="flex-1 px-4 py-2 bg-gray-100 text-gray-900 font-bold rounded-lg hover:bg-gray-200 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleDeleteConfirm}
+                    className="flex-1 px-4 py-2 bg-red-600 text-white font-bold rounded-lg hover:bg-red-700 transition-colors"
+                  >
+                    Delete
+                  </button>
+                </div>
               </div>
-            ))
+            </div>
           )}
         </div>
       </div>
-
-      {/* Delete Confirmation Modal */}
-      {showDeleteModal && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white p-6 rounded-md shadow-md">
-            <p className="mb-4">Are you sure you want to delete this poll?</p>
-            <div className="flex justify-end">
-              <button
-                className="bg-red-500 text-white px-4 py-2 rounded-md mr-2"
-                onClick={handleDeleteConfirm}
-              >
-                Delete
-              </button>
-              <button
-                className="bg-gray-300 text-black px-4 py-2 rounded-md"
-                onClick={handleDeleteCancel}
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-    
     </DashboardLayout>
   );
 };
 
-export default Mypolls;
+export default MyPolls;
