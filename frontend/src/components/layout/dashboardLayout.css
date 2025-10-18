@@ -1,0 +1,214 @@
+/* Dashboard Layout Styles */
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.2s ease-in-out;
+}
+
+.animate-slideInRight {
+  animation: slideInRight 0.3s ease-in-out;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e0;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a0aec0;
+}
+
+/* Ensure full height */
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+/* Dashboard specific styles */
+.dashboard-header {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.sidebar {
+  background: white;
+  box-shadow: 1px 0 3px rgba(0, 0, 0, 0.1);
+}
+
+/* Right sidebar profile section */
+.profile-sidebar {
+  animation: slideInRight 0.3s ease-in-out;
+  background: white;
+  box-shadow: -1px 0 3px rgba(0, 0, 0, 0.1);
+}
+
+/* Profile header gradient */
+.profile-header {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+}
+
+/* Profile info cards */
+.profile-card {
+  transition: all 0.3s ease;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+}
+
+.profile-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+/* Account info section */
+.account-info {
+  background: #f3f4f6;
+  border-radius: 8px;
+  padding: 1rem;
+}
+
+.account-info-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.account-info-item:last-child {
+  border-bottom: none;
+}
+
+/* Stats badges */
+.stat-badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.stat-badge-success {
+  background-color: #dcfce7;
+  color: #166534;
+}
+
+.stat-badge-primary {
+  background-color: #dbeafe;
+  color: #1e40af;
+}
+
+/* Logout button */
+.logout-btn {
+  background-color: #dc2626;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  width: 100%;
+}
+
+.logout-btn:hover {
+  background-color: #b91c1c;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+}
+
+.logout-btn:active {
+  transform: translateY(0);
+}
+
+/* Quick action buttons */
+.quick-action-btn {
+  width: 100%;
+  text-align: left;
+  padding: 0.5rem 0.75rem;
+  background-color: transparent;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.875rem;
+  color: #374151;
+}
+
+.quick-action-btn:hover {
+  background-color: #e5e7eb;
+  color: #111827;
+}
+
+/* Main content area responsive */
+@media (max-width: 1280px) {
+  .profile-sidebar {
+    display: none;
+  }
+}
+
+/* Ensure proper flex layout */
+.main-content-wrapper {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+.content-area {
+  flex: 1;
+  overflow: auto;
+}
+
+/* Smooth transitions */
+* {
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+/* Focus states for accessibility */
+button:focus,
+a:focus {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
+}
+
+/* Text overflow handling */
+.text-ellipsis {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.text-break {
+  word-break: break-word;
+  overflow-wrap: break-word;
+}

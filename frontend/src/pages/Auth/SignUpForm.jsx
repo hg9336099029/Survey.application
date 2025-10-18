@@ -1,92 +1,143 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import Authlayout from "../../components/layout/Authlayout";
 import { axiosInstance } from "../../utils/axiosInstance";
 import { API_PATH } from "../../utils/apipath";
+import { UserContext } from "../../context/userContext";
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 const SignUpForm = () => {
   const navigate = useNavigate();
+  const { setUserDetails } = useContext(UserContext);
+  
   const [fullname, setfullname] = useState("");
   const [email, setEmail] = useState("");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [profileImage, setProfileImage] = useState(null);
   const [errors, setErrors] = useState({});
+  const [loading, setLoading] = useState(false);
 
   const validateForm = () => {
     const newErrors = {};
 
     if (!fullname.trim()) {
       newErrors.fullname = "Full Name is required";
-      setErrors(newErrors);
-      return false;
+    } else if (fullname.trim().length < 2) {
+      newErrors.fullname = "Full Name must be at least 2 characters";
     }
 
     if (!email.trim()) {
       newErrors.email = "Email is required";
-      setErrors(newErrors);
-      return false;
-    }
-
-    if (!/\S+@\S+\.\S+/.test(email)) {
+    } else if (!/\S+@\S+\.\S+/.test(email.trim())) {
       newErrors.email = "Please enter a valid email";
-      setErrors(newErrors);
-      return false;
     }
 
     if (!username.trim()) {
       newErrors.username = "Username is required";
-      setErrors(newErrors);
-      return false;
+    } else if (username.trim().length < 3) {
+      newErrors.username = "Username must be at least 3 characters";
+    } else if (username.trim().length > 20) {
+      newErrors.username = "Username must be at most 20 characters";
     }
 
     if (!password.trim()) {
       newErrors.password = "Password is required";
-      setErrors(newErrors);
-      return false;
-    }
-
-    if (password.length < 8) {
+    } else if (password.length < 8) {
       newErrors.password = "Password must be at least 8 characters";
-      setErrors(newErrors);
-      return false;
     }
 
-    setErrors({});
-    return true;
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (validateForm()) {
+    
+    if (!validateForm()) {
+      toast.error("Please fix the errors above");
+      return;
+    }
+
+    setLoading(true);
+
+    try {
       const formData = new FormData();
-      formData.append("fullname", fullname);
-      formData.append("username", username);
-      formData.append("email", email);
+      formData.append("fullname", fullname.trim());
+      formData.append("username", username.trim());
+      formData.append("email", email.trim());
       formData.append("password", password);
+      
       if (profileImage) {
         formData.append("profileImage", profileImage.file);
       }
 
-      try {
-        const response = await axiosInstance.post(API_PATH.AUTH.REGISTER, formData);
-        if (response.status === 201) {
-          localStorage.setItem("accessToken", response.data.token);
-          localStorage.setItem("user", JSON.stringify(response.data.user));
-          navigate("/dashboard");
-        }
-      } catch (error) {
-        toast.error(error.response.data.message);
+      console.log("Attempting signup with:", { fullname, username, email, password });
+
+      const response = await axiosInstance.post(API_PATH.AUTH.REGISTER, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+
+      console.log("Signup response:", response.data);
+
+      if (response.status === 201) {
+        const { token, user } = response.data;
+        
+        // Store token and user data
+        localStorage.setItem("accessToken", token);
+        localStorage.setItem("user", JSON.stringify(user));
+        
+        // Update context
+        setUserDetails(user);
+        
+        // Show success message
+        toast.success("Account created successfully!");
+        
+        // Redirect to dashboard
+        setTimeout(() => {
+          navigate("/dashboard", { replace: true });
+        }, 500);
       }
+    } catch (error) {
+      console.error("Signup error:", error);
+      
+      let errorMessage = "An unexpected error occurred";
+      
+      if (error.response?.status === 409) {
+        errorMessage = "User already exists. Please login instead.";
+      } else if (error.response?.status === 429) {
+        errorMessage = "Too many registration attempts. Please try again later.";
+      } else if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error.response?.data?.errors) {
+        // Handle validation errors
+        const validationErrors = error.response.data.errors;
+        validationErrors.forEach(err => {
+          errorMessage = err.msg || errorMessage;
+        });
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      toast.error(errorMessage);
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
+      // Validate file size (2MB)
+      if (file.size > 2 * 1024 * 1024) {
+        toast.error("Image must be less than 2MB");
+        return;
+      }
+      
       setProfileImage({
         preview: URL.createObjectURL(file),
         file: file
@@ -120,12 +171,13 @@ const SignUpForm = () => {
                   </svg>
                 )}
               </div>
-              <label className="absolute bottom-0 right-0 bg-blue-500 rounded-full p-1.5 cursor-pointer">
+              <label className="absolute bottom-0 right-0 bg-blue-500 rounded-full p-1.5 cursor-pointer hover:bg-blue-600">
                 <input
                   type="file"
                   accept="image/*"
                   onChange={handleImageChange}
                   className="hidden"
+                  disabled={loading}
                 />
                 <svg className="w-3 h-3 text-white" viewBox="0 0 20 20" fill="currentColor">
                   <path d="M10 3v14M3 10h14" strokeWidth="2" stroke="currentColor" />
@@ -140,9 +192,13 @@ const SignUpForm = () => {
               <input
                 type="text"
                 value={fullname}
-                onChange={(e) => setfullname(e.target.value)}
-                className={`w-full p-2 bg-gray-50 rounded text-sm ${errors.fullname ? "border border-red-500" : ""}`}
-                placeholder="John"
+                onChange={(e) => {
+                  setfullname(e.target.value);
+                  if (errors.fullname) setErrors({ ...errors, fullname: "" });
+                }}
+                className={`w-full p-2 bg-gray-50 rounded text-sm border ${errors.fullname ? "border-red-500" : "border-gray-300"} focus:outline-none focus:ring-1 focus:ring-blue-500`}
+                placeholder="John Doe"
+                disabled={loading}
               />
               {errors.fullname && (
                 <p className="text-red-500 text-xs mt-1">{errors.fullname}</p>
@@ -154,9 +210,13 @@ const SignUpForm = () => {
               <input
                 type="email"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className={`w-full p-2 bg-gray-50 rounded text-sm ${errors.email ? "border border-red-500" : ""}`}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  if (errors.email) setErrors({ ...errors, email: "" });
+                }}
+                className={`w-full p-2 bg-gray-50 rounded text-sm border ${errors.email ? "border-red-500" : "border-gray-300"} focus:outline-none focus:ring-1 focus:ring-blue-500`}
                 placeholder="john@example.com"
+                disabled={loading}
               />
               {errors.email && (
                 <p className="text-red-500 text-xs mt-1">{errors.email}</p>
@@ -168,9 +228,13 @@ const SignUpForm = () => {
               <input
                 type="text"
                 value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                className={`w-full p-2 bg-gray-50 rounded text-sm ${errors.username ? "border border-red-500" : ""}`}
-                placeholder="@"
+                onChange={(e) => {
+                  setUsername(e.target.value);
+                  if (errors.username) setErrors({ ...errors, username: "" });
+                }}
+                className={`w-full p-2 bg-gray-50 rounded text-sm border ${errors.username ? "border-red-500" : "border-gray-300"} focus:outline-none focus:ring-1 focus:ring-blue-500`}
+                placeholder="john_doe"
+                disabled={loading}
               />
               {errors.username && (
                 <p className="text-red-500 text-xs mt-1">{errors.username}</p>
@@ -182,9 +246,13 @@ const SignUpForm = () => {
               <input
                 type="password"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className={`w-full p-2 bg-gray-50 rounded text-sm ${errors.password ? "border border-red-500" : ""}`}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  if (errors.password) setErrors({ ...errors, password: "" });
+                }}
+                className={`w-full p-2 bg-gray-50 rounded text-sm border ${errors.password ? "border-red-500" : "border-gray-300"} focus:outline-none focus:ring-1 focus:ring-blue-500`}
                 placeholder="Min 8 Characters"
+                disabled={loading}
               />
               {errors.password && (
                 <p className="text-red-500 text-xs mt-1">{errors.password}</p>
@@ -194,12 +262,13 @@ const SignUpForm = () => {
 
           <button
             type="submit"
-            className="w-full bg-blue-600 text-white py-2 rounded text-sm hover:bg-blue-700 transition-colors mt-2"
+            disabled={loading}
+            className="w-full bg-blue-600 text-white py-2 rounded text-sm hover:bg-blue-700 transition-colors mt-2 disabled:bg-blue-400 disabled:cursor-not-allowed"
           >
-            Create Account
+            {loading ? "Creating Account..." : "Create Account"}
           </button>
 
-          <p className="text-center text-xs text-gray-600">
+          <p className="text-center text-xs text-gray-600 mt-4">
             Already have an account?{" "}
             <a href="/login" className="text-blue-600 font-semibold hover:underline">
               Login

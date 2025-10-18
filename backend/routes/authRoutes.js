@@ -1,39 +1,34 @@
 const express = require('express');
-const { register, login, getuserdetails } = require('../controller/authController');
-const { createPoll, getAllPolls, getUserPolls, deletePoll, voteOnPoll, getVotedPolls,bookmarkpoll, getbookmarkedPolls } = require('../controller/pollController');
+const { register, login, logout, getuserdetails, updateProfile, changePassword } = require('../controller/authController');
+const { createPoll, getAllPolls, getUserPolls, deletePoll, voteOnPoll, getVotedPolls, bookmarkpoll, getbookmarkedPolls } = require('../controller/pollController');
 const protect = require('../middleware/authmiddleware');
 const upload = require('../middleware/uploadmiddleware');
 const router = express.Router();
 
+// Auth routes
 router.post('/register', register);
-
 router.post('/login', login);
+router.post('/logout', protect, logout);
 
+// User routes
 router.get('/getuser', protect, getuserdetails);
+router.put('/update-profile', protect, upload.single('profileImage'), updateProfile);
+router.put('/change-password', protect, changePassword);
 
-// Create Poll API with image upload
+// Poll creation and retrieval
 router.post('/create-poll', protect, upload.array('images', 4), createPoll);
-
-// Get all polls
 router.get('/getpolls', getAllPolls);
-
-// Get polls created by the logged-in user
 router.get('/userpoll', protect, getUserPolls);
 
-// Delete a poll
+// Poll deletion
 router.delete('/delete-poll/:id', protect, deletePoll);
 
-// Vote on a poll
+// Voting and polls
 router.patch('/votepoll/:pollId', protect, voteOnPoll);
-
-// Get voted polls
 router.get('/getvotedpolls', protect, getVotedPolls);
 
-// bookmark a poll
-
+// Bookmarking
 router.post('/bookmarkpoll/:pollId', protect, bookmarkpoll);
-
-// get bookmarked polls
-router.get('/getbookmarkedpolls', protect,getbookmarkedPolls);
+router.get('/getbookmarkedpolls', protect, getbookmarkedPolls);
 
 module.exports = router;

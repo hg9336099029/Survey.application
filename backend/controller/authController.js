@@ -89,6 +89,18 @@ const login = [
   }
 ];
 
+// Logout user
+const logout = async (req, res) => {
+  try {
+    // Client-side will handle removing the token from localStorage
+    // Server just needs to acknowledge the logout request
+    res.status(200).json({ message: 'Logout successful' });
+  } catch (error) {
+    res.status(500).json({ message: 'Logout failed' });
+  }
+};
+
+// Get user details
 const getuserdetails = async (req, res) => {
   try {
     const user = await User.findById(req.user._id).select('-password');
@@ -101,4 +113,110 @@ const getuserdetails = async (req, res) => {
   }
 };
 
-module.exports = { register, login, getuserdetails };
+// Update profile
+const updateProfile = async (req, res) => {
+  try {
+    const { fullname, username, email } = req.body;
+    const userId = req.user._id;
+
+    // Validate required fields
+    if (!fullname || !username) {
+      return res.status(400).json({ message: 'Fullname and username are required' });
+    }
+
+    // Check if username already exists (excluding current user)
+    const existingUser = await User.findOne({ 
+      username: username,
+      _id: { $ne: userId }
+    });
+    
+    if (existingUser) {
+      return res.status(409).json({ message: 'Username already taken' });
+    }
+
+    // Prepare update data
+    const updateData = {
+      fullname: fullname.trim(),
+      username: username.trim()
+    };
+
+    // Handle profile image if uploaded
+    if (req.file) {
+      const profileImageUrl = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
+      updateData.profileImageUrl = profileImageUrl;
+    }
+
+    // Update user
+    const user = await User.findByIdAndUpdate(
+      userId,
+      updateData,
+      { new: true }
+    ).select('-password');
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    res.status(200).json({ 
+      message: 'Profile updated successfully',
+      user: {
+        _id: user._id,
+        username: user.username,
+        fullname: user.fullname,
+        email: user.email,
+        profileImageUrl: user.profileImageUrl
+      }
+    });
+  } catch (error) {
+    console.error('Update profile error:', error);
+    res.status(500).json({ message: 'Failed to update profile', error: error.message });
+  }
+};
+
+// Change password
+const changePassword = async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    const userId = req.user._id;
+
+    // Validate inputs
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ message: 'Current password and new password are required' });
+    }
+
+    if (newPassword.length < 8) {
+      return res.status(400).json({ message: 'New password must be at least 8 characters' });
+    }
+
+    // Get user with password
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Verify current password
+    const isPasswordMatch = await bcrypt.compare(currentPassword, user.password);
+    if (!isPasswordMatch) {
+      return res.status(401).json({ message: 'Current password is incorrect' });
+    }
+
+    // Check if new password is same as current
+    const isSamePassword = await bcrypt.compare(newPassword, user.password);
+    if (isSamePassword) {
+      return res.status(400).json({ message: 'New password must be different from current password' });
+    }
+
+    // Update password
+    user.password = newPassword;
+    await user.save();
+
+    res.status(200).json({ 
+      message: 'Password changed successfully'
+    });
+  } catch (error) {
+    console.error('Change password error:', error);
+    res.status(500).json({ message: 'Failed to change password', error: error.message });
+  }
+};
+
+module.exports = { register, login, logout, getuserdetails, updateProfile, changePassword };

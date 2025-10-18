@@ -30,14 +30,15 @@ const limiter = rateLimit({
 });
 
 // Strict rate limiting for auth endpoints (login/register only)
+// Using skip function to apply only to login/register
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 5, // Limit login/register attempts
   skipSuccessfulRequests: true,
   message: 'Too many login attempts, please try again later.',
-  keyGenerator: (req, res) => {
-    // Use email as the key for login/register to limit per-user attempts
-    return req.body.email || req.ip;
+  skip: (req, res) => {
+    // Skip rate limiting for non-login/register routes
+    return req.path !== '/login' && req.path !== '/register';
   }
 });
 
@@ -58,7 +59,7 @@ app.use(cors({
     if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
-      callback(null, false); // disable request if not allowed
+      callback(null, false);
     }
   },
   credentials: true,
@@ -93,12 +94,8 @@ if (!fs.existsSync(uploadsDir)) {
 
 const port = process.env.PORT || 8000;
 
-// Apply auth limiter only to login and register routes
-app.post('/api/v1/auth/login', authLimiter);
-app.post('/api/v1/auth/register', authLimiter);
-
-// API Routes (without the authLimiter applied to all routes)
-app.use('/api/v1/auth', authRoutes);
+// API Routes with auth limiter applied
+app.use('/api/v1/auth', authLimiter, authRoutes);
 
 // Health check endpoint for Render
 app.get('/health', (req, res) => {

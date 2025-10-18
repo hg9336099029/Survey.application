@@ -1,93 +1,125 @@
-import React, { useEffect, useState } from 'react'
-import {
-  BrowserRouter as Router,
-  Routes,
-  Route,
-  Navigate,
-} from 'react-router-dom'
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import UserProvider from './context/userContext';
-import Mypolls from './pages/Dashboard/Mypolls';
-import Bookmark from './pages/Dashboard/Bookmark';
-import CreatePoll from './pages/Dashboard/CreatePoll';
-import Home from './pages/Dashboard/Home';
+import SignUpForm from './pages/Auth/SignUpForm';
 import Login from './pages/Auth/loginForm';
-import SignUp from './pages/Auth/SignUpForm';
+import Home from './pages/Dashboard/Home';
+import CreatePoll from './pages/Dashboard/CreatePoll';
+import Mypolls from './pages/Dashboard/Mypolls';
 import VotedPolls from './pages/Dashboard/VotedPolls';
+import Bookmark from './pages/Dashboard/Bookmark';
+import Settings from './pages/Dashboard/Settings';
+import EditProfile from './pages/Dashboard/EditProfile';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
-const App = () => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+// Protected Route Component
+const ProtectedRoute = ({ children }) => {
+  const token = localStorage.getItem('accessToken');
+  return token ? children : <Navigate to="/login" replace />;
+};
 
-  useEffect(() => {
-    // Validate token on app load
-    const validateToken = async () => {
-      try {
-        const token = localStorage.getItem('accessToken');
-        if (!token) {
-          localStorage.removeItem('user');
-          setIsAuthenticated(false);
-        } else {
-          // Validate token is not expired
-          const tokenData = JSON.parse(atob(token.split('.')[1]));
-          if (tokenData.exp * 1000 < Date.now()) {
-            localStorage.removeItem('accessToken');
-            localStorage.removeItem('user');
-            setIsAuthenticated(false);
-          } else {
-            setIsAuthenticated(true);
-          }
-        }
-      } catch (error) {
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('user');
-        setIsAuthenticated(false);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    validateToken();
-  }, []);
-
-  if (isLoading) {
-    return <div>Loading...</div>;
-  }
-
+function App() {
   return (
-    <UserProvider>
-      <Router>
+    <Router 
+      future={{
+        v7_startTransition: true,
+        v7_relativeSplatPath: true,
+      }}
+    >
+      <UserProvider>
         <Routes>
-          <Route 
-            path="/" 
-            element={isAuthenticated ? <Navigate to="/dashboard" /> : <Navigate to="/login" />} 
-          />
-          <Route path="/login" element={isAuthenticated ? <Navigate to="/dashboard" /> : <Login />} />
-          <Route path="/signup" element={isAuthenticated ? <Navigate to="/dashboard" /> : <SignUp />} />
+          {/* Auth Routes - Accessible to all */}
+          <Route path="/signup" element={<SignUpForm />} />
+          <Route path="/login" element={<Login />} />
+          
+          {/* Protected Dashboard Routes */}
           <Route 
             path="/dashboard" 
-            element={isAuthenticated ? <Home /> : <Navigate to="/login" />} 
-          />
-          <Route 
-            path="/bookmark" 
-            element={isAuthenticated ? <Bookmark /> : <Navigate to="/login" />} 
+            element={
+              <ProtectedRoute>
+                <Home />
+              </ProtectedRoute>
+            } 
           />
           <Route 
             path="/create-poll" 
-            element={isAuthenticated ? <CreatePoll /> : <Navigate to="/login" />} 
+            element={
+              <ProtectedRoute>
+                <CreatePoll />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/my-polls" 
+            element={
+              <ProtectedRoute>
+                <Mypolls />
+              </ProtectedRoute>
+            } 
           />
           <Route 
             path="/voted-polls" 
-            element={isAuthenticated ? <VotedPolls /> : <Navigate to="/login" />} 
+            element={
+              <ProtectedRoute>
+                <VotedPolls />
+              </ProtectedRoute>
+            } 
           />
           <Route 
-            path="/mypolls" 
-            element={isAuthenticated ? <Mypolls /> : <Navigate to="/login" />} 
+            path="/bookmarks" 
+            element={
+              <ProtectedRoute>
+                <Bookmark />
+              </ProtectedRoute>
+            } 
           />
-          <Route path="*" element={<Navigate to="/" />} />
+          <Route 
+            path="/settings" 
+            element={
+              <ProtectedRoute>
+                <Settings />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/edit-profile" 
+            element={
+              <ProtectedRoute>
+                <EditProfile />
+              </ProtectedRoute>
+            } 
+          />
+          
+          {/* Redirect root to dashboard if logged in, otherwise to login */}
+          <Route 
+            path="/" 
+            element={
+              localStorage.getItem('accessToken') ? 
+                <Navigate to="/dashboard" replace /> : 
+                <Navigate to="/login" replace />
+            } 
+          />
+          
+          {/* 404 - Not Found Route */}
+          <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>
-      </Router>
-    </UserProvider>
-  )
+        
+        {/* Toast Container for notifications */}
+        <ToastContainer
+          position="top-right"
+          autoClose={3000}
+          hideProgressBar={false}
+          newestOnTop={false}
+          closeOnClick
+          rtl={false}
+          pauseOnFocusLoss
+          draggable
+          pauseOnHover
+        />
+      </UserProvider>
+    </Router>
+  );
 }
 
 export default App;
