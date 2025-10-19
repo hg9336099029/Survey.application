@@ -50,15 +50,7 @@ const VotedPolls = () => {
     if (filter === 'All-polls') {
       setFilteredPolls(polls);
     } else {
-      const typeMap = {
-        'Yes/No': 'yesno',
-        'Single choice': 'single choice',
-        'Rating': 'rating',
-        'Image-based': 'imagebased',
-        'Open-Ended': 'open ended',
-      };
-      const filterType = typeMap[filter];
-      setFilteredPolls(polls.filter((poll) => poll.pollType === filterType));
+      setFilteredPolls(polls.filter((poll) => poll.pollType === filter));
     }
   };
 

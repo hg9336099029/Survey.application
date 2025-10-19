@@ -54,6 +54,7 @@ const EditProfile = () => {
 
       setProfileImage(file);
       setPreviewImage(URL.createObjectURL(file));
+      toast.info('Image selected: ' + file.name);
     }
   };
 
@@ -93,9 +94,13 @@ const EditProfile = () => {
       formData.append('fullname', fullname.trim());
       formData.append('username', username.trim());
       
+      // Only add profile image if a new one was selected
       if (profileImage) {
+        console.log('Adding profile image to form:', profileImage.name);
         formData.append('profileImage', profileImage);
       }
+
+      console.log('Submitting form data...');
 
       const response = await axiosInstance.put(API_PATH.AUTH.UPDATE_PROFILE, formData, {
         headers: {
@@ -103,10 +108,15 @@ const EditProfile = () => {
         },
       });
 
+      console.log('Response:', response.data);
+
       if (response.status === 200) {
         const updatedUser = response.data.user;
         
+        // Update localStorage
         localStorage.setItem('user', JSON.stringify(updatedUser));
+        
+        // Update context
         setUserDetails(updatedUser);
         
         toast.success('Profile updated successfully!');
@@ -117,7 +127,7 @@ const EditProfile = () => {
       }
     } catch (error) {
       console.error('Error updating profile:', error);
-      const errorMessage = error.response?.data?.message || 'Failed to update profile';
+      const errorMessage = error.response?.data?.message || error.response?.data?.error || 'Failed to update profile';
       toast.error(errorMessage);
     } finally {
       setLoading(false);
@@ -154,6 +164,10 @@ const EditProfile = () => {
                           src={previewImage}
                           alt="Profile Preview"
                           className="w-full h-full object-cover"
+                          onError={(e) => {
+                            console.error('Image failed to load:', previewImage);
+                            e.target.style.display = 'none';
+                          }}
                         />
                       ) : (
                         userInitial

@@ -1,61 +1,147 @@
 import React, { useState } from 'react';
 
 const FilterDropdown = ({ onFilterSelect }) => {
-  const filters = ["All-polls","Yes/No", "Single choice", "Rating", "Image-based", "Open-Ended"];
+  const filters = [
+    {
+      id: "All-polls",
+      label: "All Polls",
+      icon: "🎯",
+      description: "View all available polls"
+    },
+    {
+      id: "yesno",
+      label: "Yes/No",
+      icon: "👍",
+      description: "Binary choice polls"
+    },
+    {
+      id: "single choice",
+      label: "Single Choice",
+      icon: "✓",
+      description: "Choose one option"
+    },
+    {
+      id: "rating",
+      label: "Rating",
+      icon: "⭐",
+      description: "Rate 1-5 stars"
+    },
+    {
+      id: "imagebased",
+      label: "Image-based",
+      icon: "🖼️",
+      description: "Visual options"
+    },
+    {
+      id: "open ended",
+      label: "Open-Ended",
+      icon: "💬",
+      description: "Share your thoughts"
+    }
+  ];
+
   const [selectedFilter, setSelectedFilter] = useState("All-polls");
 
-  const handleFilterClick = (filter) => {
-    setSelectedFilter(filter);
-    onFilterSelect(filter);
+  const handleFilterClick = (filterId) => {
+    setSelectedFilter(filterId);
+    onFilterSelect(filterId);
   };
 
-  return (
-    <div className="flex flex-row justify-center items-center mx-auto w-auto mt-5">
-      {/* For greater than medium size screen show options */}
-      <div className="hidden sm:block rounded-2xl border border-gray-300 bg-sky-50 py-2 px-3 shadow-2xl">
-        <nav className="flex flex-wrap gap-4">
-          {filters.map((name, index) => (
-            <a
-              key={index}
-              href="#"
-              onClick={() => handleFilterClick(name)}
-              className={`whitespace-nowrap inline-flex rounded-2xl py-2 px-3 text-sm font-medium transition-all duration-200 ease-in-out ${
-                selectedFilter === name ? "bg-sky-400 text-gray-50" : "text-sky-400 hover:bg-sky-400 hover:text-gray-50"
-              }`}
-            >
-              {name}
-            </a>
-          ))}
-        </nav>
-      </div>
+  const selectedFilterObj = filters.find(f => f.id === selectedFilter);
 
-      {/* Dropdown for small to medium size screen */}
-      <div className="relative sm:hidden w-full m-3">
-        <details className="border border-gray-300 bg-sky-50 py-2 px-3 rounded-2xl shadow-2xl mt-2">
-          <summary className="flex flex-row w-auto h-auto gap-3 p-2 cursor-pointer">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
-            Poll Type
-          </summary>
-          <nav className="absolute left-0 right-0 bg-sky-50 border border-gray-300 rounded-2xl shadow-2xl mt-2 p-2 ">
-            {filters.map((name, index) => (
-              <a
-                key={index}
-                href="#"
-                onClick={() => handleFilterClick(name)}
-                className={`block whitespace-nowrap rounded-2xl py-2 px-3 text-sm font-medium transition-all duration-200 ease-in-out  ${
-                  selectedFilter === name ? "bg-sky-400 text-gray-50" : "text-sky-400 hover:bg-sky-400 hover:text-gray-50"
+  return (
+    <div className="w-full">
+      {/* Desktop View */}
+      <div className="hidden md:block">
+        <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-2xl border-2 border-blue-200 p-6 shadow-lg hover:shadow-xl transition-all duration-300">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-lg">
+              🔍
+            </div>
+            <h3 className="text-lg font-bold text-gray-900">Filter by Poll Type</h3>
+          </div>
+          
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
+            {filters.map((filter) => (
+              <button
+                key={filter.id}
+                onClick={() => handleFilterClick(filter.id)}
+                className={`group relative px-4 py-3 rounded-xl font-semibold text-sm transition-all duration-300 transform hover:scale-105 ${
+                  selectedFilter === filter.id
+                    ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg scale-105'
+                    : 'bg-white text-gray-700 border-2 border-gray-200 hover:border-blue-400 hover:text-blue-600 hover:shadow-md'
                 }`}
               >
-                {name}
-              </a>
+                <span className="text-lg mr-1">{filter.icon}</span>
+                <span>{filter.label}</span>
+                
+                {/* Tooltip */}
+                <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-10">
+                  {filter.description}
+                </div>
+              </button>
             ))}
-          </nav>
-        </details>
+          </div>
+        </div>
+      </div>
+
+      {/* Mobile View - Horizontal Scroll */}
+      <div className="md:hidden">
+        <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-2xl border-2 border-blue-200 p-4 shadow-lg">
+          <div className="flex items-center gap-2 mb-3">
+            <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-sm">
+              🔍
+            </div>
+            <h3 className="text-base font-bold text-gray-900">Filter</h3>
+          </div>
+          
+          <div className="overflow-x-auto scrollbar-hide">
+            <div className="flex gap-2 pb-2">
+              {filters.map((filter) => (
+                <button
+                  key={filter.id}
+                  onClick={() => handleFilterClick(filter.id)}
+                  className={`flex-shrink-0 px-4 py-2 rounded-lg font-semibold text-sm transition-all duration-300 whitespace-nowrap ${
+                    selectedFilter === filter.id
+                      ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg'
+                      : 'bg-white text-gray-700 border-2 border-gray-200 hover:border-blue-400'
+                  }`}
+                >
+                  <span className="text-base mr-1">{filter.icon}</span>
+                  {filter.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Selected Filter Display */}
+      <div className="mt-4 p-4 bg-gradient-to-r from-blue-100 to-purple-100 rounded-xl border-2 border-blue-300">
+        <div className="flex items-center gap-3">
+          <div className="text-3xl">{selectedFilterObj?.icon}</div>
+          <div>
+            <p className="text-xs text-gray-600 font-medium">Currently Viewing</p>
+            <p className="text-lg font-bold text-gray-900">{selectedFilterObj?.label}</p>
+            <p className="text-sm text-gray-600">{selectedFilterObj?.description}</p>
+          </div>
+        </div>
       </div>
     </div>
   );
 };
 
 export default FilterDropdown;
+
+// Add this to your global CSS to hide scrollbar while keeping scrolling functionality
+// Add to your index.css or tailwind config:
+/*
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+*/

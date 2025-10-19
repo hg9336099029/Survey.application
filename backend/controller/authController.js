@@ -28,6 +28,7 @@ const register = [
     try {
       // Check if user already exists
       const existingUser = await User.findOne({ $or: [{ email }, { username }] });
+      
       if (existingUser) {
         return res.status(409).json({ message: 'User already exists' });
       }
@@ -80,7 +81,8 @@ const login = [
           _id: user._id,
           username: user.username,
           fullname: user.fullname,
-          email: user.email
+          email: user.email,
+          profileImageUrl: user.profileImageUrl
         }
       });
     } catch (error) {
@@ -92,8 +94,6 @@ const login = [
 // Logout user
 const logout = async (req, res) => {
   try {
-    // Client-side will handle removing the token from localStorage
-    // Server just needs to acknowledge the logout request
     res.status(200).json({ message: 'Logout successful' });
   } catch (error) {
     res.status(500).json({ message: 'Logout failed' });
@@ -142,7 +142,9 @@ const updateProfile = async (req, res) => {
 
     // Handle profile image if uploaded
     if (req.file) {
+      console.log('File uploaded:', req.file);
       const profileImageUrl = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
+      console.log('Profile image URL:', profileImageUrl);
       updateData.profileImageUrl = profileImageUrl;
     }
 
@@ -156,6 +158,8 @@ const updateProfile = async (req, res) => {
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
+
+    console.log('Updated user:', user);
 
     res.status(200).json({ 
       message: 'Profile updated successfully',

@@ -50,15 +50,7 @@ const Bookmark = () => {
     if (filter === 'All-polls') {
       setFilteredPolls(bookmarkedPolls);
     } else {
-      const typeMap = {
-        'Yes/No': 'yesno',
-        'Single choice': 'single choice',
-        'Rating': 'rating',
-        'Image-based': 'imagebased',
-        'Open-Ended': 'open ended',
-      };
-      const filterType = typeMap[filter];
-      setFilteredPolls(bookmarkedPolls.filter((poll) => poll.pollType === filterType));
+      setFilteredPolls(bookmarkedPolls.filter((poll) => poll.pollType === filter));
     }
   };
 

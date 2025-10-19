@@ -1,4 +1,4 @@
-import React, { useContext, useState, useEffect } from 'react';
+import React, { useContext, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { UserContext } from '../../context/userContext';
 import { axiosInstance } from '../../utils/axiosInstance';
@@ -6,15 +6,15 @@ import { API_PATH } from '../../utils/apipath';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import './dashboardLayout.css';
+import Navbar from './Navbar';
 
 export const DashboardLayout = ({ children }) => {
   const { user, clearUserDetails } = useContext(UserContext);
   const navigate = useNavigate();
-  const [userData, setUserData] = useState(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [userData, setUserData] = useState(null);
 
-  useEffect(() => {
-    // Get user from localStorage or context
+  React.useEffect(() => {
     const storedUser = localStorage.getItem('user');
     if (storedUser) {
       try {
@@ -31,25 +31,19 @@ export const DashboardLayout = ({ children }) => {
 
   const handleLogout = async () => {
     try {
-      // Call logout endpoint
       await axiosInstance.post(API_PATH.AUTH.LOGOUT);
       
-      // Clear local storage
       localStorage.removeItem('accessToken');
       localStorage.removeItem('user');
       
-      // Clear user context
       clearUserDetails();
       
-      // Show success message
       toast.success('Logged out successfully');
       
-      // Redirect to login
       navigate('/login', { replace: true });
     } catch (error) {
       console.error('Logout error:', error);
       
-      // Still clear local storage and redirect even if API call fails
       localStorage.removeItem('accessToken');
       localStorage.removeItem('user');
       clearUserDetails();
@@ -61,14 +55,13 @@ export const DashboardLayout = ({ children }) => {
   };
 
   const displayName = userData?.username || user?.username || 'User';
-  const displayEmail = userData?.email || user?.email || 'user@example.com';
-  const displayFullname = userData?.fullname || user?.fullname || 'User';
+  const profileImageUrl = userData?.profileImageUrl || user?.profileImageUrl;
   const userInitial = displayName?.charAt(0).toUpperCase() || 'U';
 
   return (
     <div className="flex h-screen bg-gray-100">
       {/* Sidebar */}
-      <div className="w-64 bg-gradient-to-b from-gray-900 to-gray-800 shadow-2xl flex flex-col border-r border-gray-700">
+      <div className="w-64 bg-gradient-to-b from-gray-900 to-gray-800 shadow-2xl flex flex-col border-r border-gray-700 hidden lg:flex">
         <div className="p-6 border-b border-gray-700">
           <div className="flex items-center gap-2 mb-2">
             <div className="bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg p-2">
@@ -146,127 +139,54 @@ export const DashboardLayout = ({ children }) => {
         </nav>
 
         {/* Sidebar Footer */}
-        <div className="p-4 border-t border-gray-700 bg-gray-800">
-          <Link to="/settings" className="flex items-center gap-3 px-4 py-2 text-gray-300 hover:text-white hover:bg-gray-700 rounded-lg transition-all duration-200 mb-2">
-            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" />
-            </svg>
-            <span className="font-medium text-sm">Settings</span>
+        <div className="p-4 border-t border-gray-700 bg-gray-800 space-y-3">
+          {/* User Profile Card */}
+          <Link 
+            to="/edit-profile"
+            className="flex items-center gap-3 p-3 bg-gray-700 hover:bg-gray-600 rounded-lg transition-all duration-200"
+          >
+            <div className="w-10 h-10 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full flex items-center justify-center text-white font-bold text-sm overflow-hidden flex-shrink-0">
+              {profileImageUrl ? (
+                <img
+                  src={profileImageUrl}
+                  alt="Profile"
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    console.error('Failed to load profile image in sidebar:', profileImageUrl);
+                    e.target.style.display = 'none';
+                  }}
+                />
+              ) : (
+                userInitial
+              )}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-white truncate">{displayName}</p>
+              <p className="text-xs text-gray-300 truncate">@{displayName}</p>
+            </div>
           </Link>
-          <p className="text-xs text-gray-500 text-center py-2">
-            Logged in as <strong>{displayName}</strong>
-          </p>
+
+          {/* Logout Button */}
+          <button
+            onClick={handleLogout}
+            className="w-full flex items-center gap-3 px-4 py-2 text-red-400 hover:text-red-300 hover:bg-red-900/20 rounded-lg transition-all duration-200 font-semibold text-sm"
+          >
+            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clipRule="evenodd" />
+            </svg>
+            Logout
+          </button>
         </div>
       </div>
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Top Header */}
-        <div className="bg-white shadow-md px-8 py-4 flex justify-between items-center">
-          <div>
-            <h2 className="text-2xl font-semibold text-gray-800">Dashboard</h2>
-            <p className="text-sm text-gray-500">Welcome to PollHub</p>
-          </div>
-        </div>
+        {/* Navbar */}
+        <Navbar />
 
-        {/* Main Content + Right Sidebar Layout */}
-        <div className="flex flex-1 overflow-hidden">
-          {/* Page Content */}
-          <div className="flex-1 overflow-auto p-6">
-            {children}
-          </div>
-
-          {/* Right Sidebar - Permanent Profile Section */}
-          <div className="w-80 bg-white shadow-lg flex flex-col border-l border-gray-200">
-            {/* Profile Header */}
-            <div className="p-6 bg-gradient-to-r from-blue-600 to-blue-700 text-white">
-              <div className="flex flex-col items-center">
-                <div className="w-20 h-20 bg-blue-400 rounded-full flex items-center justify-center text-3xl font-bold mb-4">
-                  {userInitial}
-                </div>
-                <h3 className="text-xl font-semibold">{displayName}</h3>
-                <p className="text-sm text-blue-100 mt-1">{displayFullname}</p>
-              </div>
-            </div>
-
-            {/* Profile Information */}
-            <div className="flex-1 overflow-auto p-6 space-y-6">
-              {/* Account Section */}
-              <div className="bg-gray-50 rounded-lg p-4">
-                <h4 className="text-sm font-semibold text-gray-800 mb-3">Account Information</h4>
-                <div className="space-y-3">
-                  <div>
-                    <p className="text-xs text-gray-600 font-medium">Email Address</p>
-                    <p className="text-sm text-gray-800 mt-1 break-words">{displayEmail}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-600 font-medium">Username</p>
-                    <p className="text-sm text-gray-800 mt-1">@{displayName}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-600 font-medium">Full Name</p>
-                    <p className="text-sm text-gray-800 mt-1">{displayFullname}</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Stats Section */}
-              <div className="bg-blue-50 rounded-lg p-4">
-                <h4 className="text-sm font-semibold text-gray-800 mb-3">Quick Stats</h4>
-                <div className="space-y-2">
-                  <div className="flex justify-between items-center">
-                    <span className="text-xs text-gray-700">Profile Status</span>
-                    <span className="inline-block px-3 py-1 bg-green-100 text-green-800 text-xs font-semibold rounded-full">Active</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-xs text-gray-700">Account Type</span>
-                    <span className="inline-block px-3 py-1 bg-blue-100 text-blue-800 text-xs font-semibold rounded-full">User</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Quick Links */}
-              <div className="bg-gray-50 rounded-lg p-4">
-                <h4 className="text-sm font-semibold text-gray-800 mb-3">Quick Actions</h4>
-                <div className="space-y-2">
-                  <Link to="/edit-profile" className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-200 rounded transition-colors block">
-                    👤 Edit Profile
-                  </Link>
-                  <Link to="/settings" className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-200 rounded transition-colors block">
-                    🔐 Change Password
-                  </Link>
-                  <Link to="/settings" className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-200 rounded transition-colors block">
-                    ⚙️ Settings
-                  </Link>
-                </div>
-              </div>
-
-              {/* Account Stats */}
-              <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg p-4">
-                <h4 className="text-sm font-semibold text-gray-800 mb-3">Account Created</h4>
-                <p className="text-xs text-gray-700">
-                  {new Date().toLocaleDateString('en-US', {
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric'
-                  })}
-                </p>
-              </div>
-            </div>
-
-            {/* Logout Button */}
-            <div className="p-6 border-t bg-gray-50">
-              <button
-                onClick={handleLogout}
-                className="w-full bg-red-600 hover:bg-red-700 text-white font-semibold py-3 rounded-lg transition-colors flex items-center justify-center gap-2"
-              >
-                🚪 Logout
-              </button>
-              <p className="text-xs text-gray-600 text-center mt-3">
-                Click logout to end your session
-              </p>
-            </div>
-          </div>
+        {/* Page Content */}
+        <div className="flex-1 overflow-auto">
+          {children}
         </div>
       </div>
     </div>
