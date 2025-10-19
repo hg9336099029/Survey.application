@@ -45,8 +45,14 @@ const SignUpForm = () => {
 
     if (!password.trim()) {
       newErrors.password = "Password is required";
-    } else if (password.length < 8) {
+    } else if (password.trim().length < 8) {
       newErrors.password = "Password must be at least 8 characters";
+    } else if (!/[a-z]/.test(password)) {
+      newErrors.password = "Password must contain at least one lowercase letter";
+    } else if (!/[A-Z]/.test(password)) {
+      newErrors.password = "Password must contain at least one uppercase letter";
+    } else if (!/\d/.test(password)) {
+      newErrors.password = "Password must contain at least one number";
     }
 
     setErrors(newErrors);
@@ -68,13 +74,13 @@ const SignUpForm = () => {
       formData.append("fullname", fullname.trim());
       formData.append("username", username.trim());
       formData.append("email", email.trim());
-      formData.append("password", password);
+      formData.append("password", password.trim());
       
       if (profileImage) {
         formData.append("profileImage", profileImage.file);
       }
 
-      console.log("Attempting signup with:", { fullname, username, email, password });
+      console.log("Attempting signup with:", { fullname, username, email, password: "***" });
 
       const response = await axiosInstance.post(API_PATH.AUTH.REGISTER, formData, {
         headers: {
@@ -116,9 +122,9 @@ const SignUpForm = () => {
       } else if (error.response?.data?.errors) {
         // Handle validation errors
         const validationErrors = error.response.data.errors;
-        validationErrors.forEach(err => {
-          errorMessage = err.msg || errorMessage;
-        });
+        if (Array.isArray(validationErrors)) {
+          errorMessage = validationErrors.map(err => err.msg).join(", ");
+        }
       } else if (error.message) {
         errorMessage = error.message;
       }
@@ -144,6 +150,28 @@ const SignUpForm = () => {
       });
     }
   };
+
+  const getPasswordStrength = () => {
+    if (!password) return { strength: 0, text: '', color: '' };
+    
+    let strength = 0;
+    if (password.length >= 8) strength++;
+    if (/[a-z]/.test(password)) strength++;
+    if (/[A-Z]/.test(password)) strength++;
+    if (/\d/.test(password)) strength++;
+    
+    const strengthMap = {
+      0: { text: 'Very Weak', color: 'bg-red-500' },
+      1: { text: 'Weak', color: 'bg-orange-500' },
+      2: { text: 'Fair', color: 'bg-yellow-500' },
+      3: { text: 'Good', color: 'bg-blue-500' },
+      4: { text: 'Strong', color: 'bg-green-500' }
+    };
+    
+    return { strength: strength * 25, ...strengthMap[strength] };
+  };
+
+  const passwordStrength = getPasswordStrength();
 
   return (
     <Authlayout>
@@ -254,6 +282,37 @@ const SignUpForm = () => {
                 placeholder="Min 8 Characters"
                 disabled={loading}
               />
+              {password && (
+                <>
+                  <div className="mt-2 space-y-1">
+                    <div className="flex gap-1">
+                      {[...Array(4)].map((_, i) => (
+                        <div
+                          key={i}
+                          className={`h-1 flex-1 rounded-full ${i < Math.ceil(passwordStrength / 25) ? passwordStrength > 0 ? passwordStrength > 50 ? 'bg-yellow-500' : 'bg-orange-500' : 'bg-red-500' : 'bg-gray-300'}`}
+                        ></div>
+                      ))}
+                    </div>
+                    <p className="text-xs text-gray-600">
+                      Strength: <span className="font-semibold">{passwordStrength > 0 ? passwordStrength + '%' : '0%'}</span>
+                    </p>
+                  </div>
+                  <ul className="mt-2 space-y-1 text-xs text-gray-600">
+                    <li className={password.length >= 8 ? 'text-green-600 font-semibold' : ''}>
+                      ✓ At least 8 characters
+                    </li>
+                    <li className={/[a-z]/.test(password) ? 'text-green-600 font-semibold' : ''}>
+                      ✓ Lowercase letter (a-z)
+                    </li>
+                    <li className={/[A-Z]/.test(password) ? 'text-green-600 font-semibold' : ''}>
+                      ✓ Uppercase letter (A-Z)
+                    </li>
+                    <li className={/\d/.test(password) ? 'text-green-600 font-semibold' : ''}>
+                      ✓ Number (0-9)
+                    </li>
+                  </ul>
+                </>
+              )}
               {errors.password && (
                 <p className="text-red-500 text-xs mt-1">{errors.password}</p>
               )}

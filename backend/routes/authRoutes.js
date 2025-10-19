@@ -6,29 +6,80 @@ const upload = require('../middleware/uploadmiddleware');
 const router = express.Router();
 
 // Auth routes
-router.post('/register', register);
-router.post('/login', login);
-router.post('/logout', protect, logout);
+router.post('/register', (req, res, next) => {
+  console.log('Register route called with body:', req.body);
+  next();
+}, register);
+
+router.post('/login', (req, res, next) => {
+  console.log('Login route called with body:', req.body);
+  next();
+}, login);
+
+router.post('/logout', protect, (req, res, next) => {
+  console.log('Logout route called');
+  next();
+}, logout);
 
 // User routes
-router.get('/getuser', protect, getuserdetails);
-router.put('/update-profile', protect, upload.single('profileImage'), updateProfile);
-router.put('/change-password', protect, changePassword);
+router.get('/getuser', protect, (req, res, next) => {
+  console.log('Get user route called');
+  next();
+}, getuserdetails);
+
+router.put('/update-profile', protect, upload.single('profileImage'), (req, res, next) => {
+  console.log('Update profile route called with body:', req.body);
+  console.log('File:', req.file);
+  next();
+}, updateProfile);
+
+router.put('/change-password', protect, (req, res, next) => {
+  console.log('Change password route called');
+  next();
+}, changePassword);
 
 // Poll creation and retrieval
-router.post('/create-poll', protect, upload.array('images', 4), createPoll);
-router.get('/getpolls', getAllPolls);
-router.get('/userpoll', protect, getUserPolls);
+router.post('/create-poll', protect, upload.array('images', 4), (req, res, next) => {
+  console.log('Create poll route called');
+  next();
+}, createPoll);
+
+router.get('/getpolls', (req, res, next) => {
+  console.log('Get all polls route called');
+  next();
+}, getAllPolls);
+
+router.get('/userpoll', protect, (req, res, next) => {
+  console.log('Get user polls route called');
+  next();
+}, getUserPolls);
 
 // Poll deletion
-router.delete('/delete-poll/:id', protect, deletePoll);
+router.delete('/delete-poll/:id', protect, (req, res, next) => {
+  console.log('Delete poll route called with id:', req.params.id);
+  next();
+}, deletePoll);
 
 // Voting and polls
-router.patch('/votepoll/:pollId', protect, voteOnPoll);
-router.get('/getvotedpolls', protect, getVotedPolls);
+router.patch('/votepoll/:pollId', protect, (req, res, next) => {
+  console.log('Vote on poll route called');
+  next();
+}, voteOnPoll);
+
+router.get('/getvotedpolls', protect, (req, res, next) => {
+  console.log('Get voted polls route called');
+  next();
+}, getVotedPolls);
 
 // Bookmarking
-router.post('/bookmarkpoll/:pollId', protect, bookmarkpoll);
-router.get('/getbookmarkedpolls', protect, getbookmarkedPolls);
+router.post('/bookmarkpoll/:pollId', protect, (req, res, next) => {
+  console.log('Bookmark poll route called');
+  next();
+}, bookmarkpoll);
+
+router.get('/getbookmarkedpolls', protect, (req, res, next) => {
+  console.log('Get bookmarked polls route called');
+  next();
+}, getbookmarkedPolls);
 
 module.exports = router;

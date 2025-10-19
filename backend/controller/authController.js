@@ -10,25 +10,45 @@ const generateToken = (id) => {
     expiresIn: '7d'
   });
 };
-
+y
 // Register user with validation
 const register = [
-  body('username').trim().escape().isLength({ min: 3, max: 20 }),
-  body('fullname').trim().escape().isLength({ min: 2, max: 50 }),
+  body('username').trim().isLength({ min: 3, max: 20 }),
+  body('fullname').trim().isLength({ min: 2, max: 50 }),
   body('email').isEmail().normalizeEmail(),
-  body('password').isLength({ min: 8 }).withMessage('Password must be at least 8 characters'),
+  body('password')
+    .trim()
+    .isLength({ min: 8 })
+    .withMessage('Password must be at least 8 characters'),
   async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
+      console.log('Validation errors:', errors.array());
       return res.status(400).json({ errors: errors.array() });
     }
 
     const { username, fullname, email, password } = req.body;
 
     try {
+      // Validate password separately (don't apply escape to password)
+      if (!password || password.length < 8) {
+        return res.status(400).json({ message: 'Password must be at least 8 characters long' });
+      }
+
+      if (!/[a-z]/.test(password)) {
+        return res.status(400).json({ message: 'Password must contain at least one lowercase letter' });
+      }
+
+      if (!/[A-Z]/.test(password)) {
+        return res.status(400).json({ message: 'Password must contain at least one uppercase letter' });
+      }
+
+      if (!/\d/.test(password)) {
+        return res.status(400).json({ message: 'Password must contain at least one number' });
+      }
+
       // Check if user already exists
       const existingUser = await User.findOne({ $or: [{ email }, { username }] });
-      
       if (existingUser) {
         return res.status(409).json({ message: 'User already exists' });
       }
@@ -46,6 +66,7 @@ const register = [
         }
       });
     } catch (error) {
+      console.error('Registration error:', error);
       res.status(500).json({ message: 'Registration failed' });
     }
   }
@@ -54,7 +75,7 @@ const register = [
 // Login user with validation
 const login = [
   body('email').isEmail().normalizeEmail(),
-  body('password').exists(),
+  body('password').exists().withMessage('Password is required'),
   async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -64,6 +85,11 @@ const login = [
     const { email, password } = req.body;
 
     try {
+      // Validate password exists
+      if (!password || password.trim() === '') {
+        return res.status(400).json({ message: 'Password is required' });
+      }
+
       const user = await User.findOne({ email });
       if (!user) {
         return res.status(401).json({ message: 'Invalid credentials' });
@@ -86,6 +112,7 @@ const login = [
         }
       });
     } catch (error) {
+      console.error('Login error:', error);
       res.status(500).json({ message: 'Login failed' });
     }
   }
@@ -109,6 +136,7 @@ const getuserdetails = async (req, res) => {
     }
     res.status(200).json({ user });
   } catch (error) {
+    console.error('Get user details error:', error);
     res.status(500).json({ message: 'Failed to fetch user details' });
   }
 };
@@ -188,8 +216,29 @@ const changePassword = async (req, res) => {
       return res.status(400).json({ message: 'Current password and new password are required' });
     }
 
-    if (newPassword.length < 8) {
+    // Trim passwords
+    const trimmedNewPassword = newPassword.trim();
+    const trimmedCurrentPassword = currentPassword.trim();
+
+    // Validate new password
+    if (trimmedNewPassword.length < 8) {
       return res.status(400).json({ message: 'New password must be at least 8 characters' });
+    }
+
+    if (!/[a-z]/.test(trimmedNewPassword)) {
+      return res.status(400).json({ message: 'Password must contain at least one lowercase letter' });
+    }
+
+    if (!/[A-Z]/.test(trimmedNewPassword)) {
+      return res.status(400).json({ message: 'Password must contain at least one uppercase letter' });
+    }
+
+    if (!/\d/.test(trimmedNewPassword)) {
+      return res.status(400).json({ message: 'Password must contain at least one number' });
+    }
+
+    if (trimmedCurrentPassword.length === 0) {
+      return res.status(400).json({ message: 'Current password cannot be empty' });
     }
 
     // Get user with password
@@ -199,19 +248,19 @@ const changePassword = async (req, res) => {
     }
 
     // Verify current password
-    const isPasswordMatch = await bcrypt.compare(currentPassword, user.password);
+    const isPasswordMatch = await bcrypt.compare(trimmedCurrentPassword, user.password);
     if (!isPasswordMatch) {
       return res.status(401).json({ message: 'Current password is incorrect' });
     }
 
     // Check if new password is same as current
-    const isSamePassword = await bcrypt.compare(newPassword, user.password);
+    const isSamePassword = await bcrypt.compare(trimmedNewPassword, user.password);
     if (isSamePassword) {
       return res.status(400).json({ message: 'New password must be different from current password' });
     }
 
     // Update password
-    user.password = newPassword;
+    user.password = trimmedNewPassword;
     await user.save();
 
     res.status(200).json({ 
