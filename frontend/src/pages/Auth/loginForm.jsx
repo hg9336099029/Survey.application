@@ -34,14 +34,17 @@ const Login = () => {
     setLoading(true);
 
     try {
-      console.log("Attempting login with:", { email, password });
+      console.log("🔐 Login attempt:", { 
+        email: email.trim(),
+        apiUrl: import.meta.env.VITE_API_URL || 'http://localhost:8000'
+      });
       
       const response = await axiosInstance.post(API_PATH.AUTH.LOGIN, { 
         email: email.trim(), 
         password: password.trim() 
       });
 
-      console.log("Login response:", response.data);
+      console.log("✅ Login response received:", response.status);
 
       const { token, user } = response.data;
       
@@ -55,6 +58,7 @@ const Login = () => {
         
         // Show success message
         toast.success("Login successful!");
+        console.log("✅ User logged in:", user.username);
         
         // Redirect to dashboard
         setTimeout(() => {
@@ -65,14 +69,26 @@ const Login = () => {
         toast.error("Invalid response from server");
       }
     } catch (error) {
-      console.error("Login error:", error);
+      console.error("❌ Login error details:", {
+        message: error.message,
+        status: error.response?.status,
+        data: error.response?.data,
+        url: error.config?.url,
+      });
       
       let errorMessage = "An unexpected error occurred";
       
-      if (error.response?.status === 429) {
+      if (error.message === 'Network Error') {
+        errorMessage = "Network error. Please check:\n✓ Backend is running on port 8000\n✓ API URL is correct\n✓ Check browser console for details";
+        console.error('🚫 Network Error - Backend may not be running');
+      } else if (error.code === 'ECONNREFUSED') {
+        errorMessage = "Cannot connect to backend. Is it running on port 8000?";
+      } else if (error.response?.status === 429) {
         errorMessage = "Too many login attempts. Please try again later.";
       } else if (error.response?.status === 401) {
         errorMessage = "Invalid email or password";
+      } else if (error.response?.status === 400) {
+        errorMessage = error.response.data?.message || "Invalid request";
       } else if (error.response?.data?.message) {
         errorMessage = error.response.data.message;
       } else if (error.message) {
@@ -127,7 +143,7 @@ const Login = () => {
             </div>
 
             {error && (
-              <div className="p-3 bg-red-50 border border-red-200 rounded text-red-700 text-xs">
+              <div className="p-3 bg-red-50 border border-red-200 rounded text-red-700 text-xs whitespace-pre-wrap">
                 {error}
               </div>
             )}

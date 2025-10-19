@@ -10,7 +10,7 @@ const generateToken = (id) => {
     expiresIn: '7d'
   });
 };
-y
+
 // Register user with validation
 const register = [
   body('username').trim().isLength({ min: 3, max: 20 }),

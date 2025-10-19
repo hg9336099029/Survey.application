@@ -16,10 +16,11 @@ const app = express();
 // Trust proxy
 app.set('trust proxy', 1);
 
-// Request logging middleware
+// Request logging middleware - DO THIS FIRST
 app.use((req, res, next) => {
-  console.log(`[${new Date().toISOString()}] ${req.method} ${req.path}`);
-  console.log('Headers:', req.headers);
+  console.log(`\n📨 [${new Date().toISOString()}] ${req.method} ${req.path}`);
+  console.log('📍 Origin:', req.headers.origin);
+  console.log('📦 Content-Type:', req.headers['content-type']);
   next();
 });
 
@@ -28,26 +29,33 @@ app.use(helmet({
   crossOriginResourcePolicy: false,
 }));
 
-// CORS Configuration
+// CORS Configuration - MUST BE BEFORE ROUTES
 const allowedOrigins = [
   'http://localhost:3000',
   'http://localhost:5173',
-  'https://survey-application-beta.vercel.app'
+  'http://127.0.0.1:3000',
+  'http://127.0.0.1:5173',
+  'https://survey-application-beta.vercel.app',
 ];
 
 const corsOptions = {
   origin: function(origin, callback) {
-    console.log('CORS request from origin:', origin);
+    console.log('🔍 CORS check for origin:', origin);
+    
+    // Allow requests with no origin (like mobile apps or Postman)
     if (!origin || allowedOrigins.includes(origin)) {
+      console.log('✅ CORS allowed');
       callback(null, true);
     } else {
-      console.log('CORS blocked origin:', origin);
-      callback(null, true); // Allow for now, will check in middleware
+      console.log('❌ CORS blocked for:', origin);
+      callback(new Error('Not allowed by CORS'));
     }
   },
   credentials: true,
-  methods: ['GET','POST','PUT','PATCH','DELETE','OPTIONS'],
-  allowedHeaders: ['Content-Type','Authorization'],
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  optionsSuccessStatus: 200,
+  maxAge: 86400, // 24 hours
 };
 
 app.use(cors(corsOptions));
@@ -81,7 +89,7 @@ app.use(limiter);
 // Data sanitization against NoSQL injection
 app.use(mongoSanitize());
 
-// Body parser with size limits
+// Body parser with size limits - AFTER CORS, BEFORE ROUTES
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ limit: '10mb', extended: true }));
 
@@ -89,7 +97,7 @@ app.use(express.urlencoded({ limit: '10mb', extended: true }));
 const uploadsDir = path.join(__dirname, 'uploads');
 if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
-  console.log('Created uploads directory:', uploadsDir);
+  console.log('✅ Created uploads directory:', uploadsDir);
 }
 
 // Serve static files from uploads folder BEFORE other middleware
@@ -112,15 +120,20 @@ app.use('/api/v1/auth', authLimiter, authRoutes);
 
 // Health check endpoint
 app.get('/health', (req, res) => {
-  console.log('Health check called');
-  res.status(200).json({ status: 'OK', timestamp: new Date().toISOString() });
+  console.log('✅ Health check');
+  res.status(200).json({ 
+    status: 'OK', 
+    timestamp: new Date().toISOString(),
+    port: port,
+    uploads: uploadsDir
+  });
 });
 
 // Test endpoint to verify file serving
 app.get('/test-upload', (req, res) => {
   try {
     const files = fs.readdirSync(uploadsDir);
-    console.log('Test upload called, files:', files);
+    console.log('📁 Test upload called, files:', files);
     res.json({ 
       message: 'Upload test endpoint',
       uploadsDir: uploadsDir,
@@ -129,25 +142,46 @@ app.get('/test-upload', (req, res) => {
       backendUrl: `http://localhost:${port}`
     });
   } catch (error) {
-    console.error('Test upload error:', error);
+    console.error('❌ Test upload error:', error);
     res.status(500).json({ error: error.message });
   }
 });
 
 // 404 handler
 app.use((req, res) => {
-  console.log('404 - Route not found:', req.method, req.path);
-  res.status(404).json({ message: 'Route not found', path: req.path, method: req.method });
+  console.log('❌ 404 - Route not found:', req.method, req.path);
+  res.status(404).json({ 
+    message: 'Route not found', 
+    path: req.path, 
+    method: req.method,
+    availableRoutes: [
+      'POST /api/v1/auth/register',
+      'POST /api/v1/auth/login',
+      'POST /api/v1/auth/logout',
+      'GET /api/v1/auth/getuser',
+      'PUT /api/v1/auth/update-profile',
+      'PUT /api/v1/auth/change-password',
+      'POST /api/v1/auth/create-poll',
+      'GET /api/v1/auth/getpolls',
+      'GET /api/v1/auth/userpoll',
+      'DELETE /api/v1/auth/delete-poll/:id',
+      'PATCH /api/v1/auth/votepoll/:pollId',
+      'GET /api/v1/auth/getvotedpolls',
+      'POST /api/v1/auth/bookmarkpoll/:pollId',
+      'GET /api/v1/auth/getbookmarkedpolls',
+      'GET /health'
+    ]
+  });
 });
 
 // Error handling middleware
 app.use((err, req, res, next) => {
-  console.error('=== ERROR ===');
-  console.error('Error:', err.message);
-  console.error('Stack:', err.stack);
-  console.error('URL:', req.method, req.path);
-  console.error('Body:', req.body);
-  console.error('==============');
+  console.error('\n❌ === ERROR OCCURRED ===');
+  console.error('Error Message:', err.message);
+  console.error('Error Stack:', err.stack);
+  console.error('Request URL:', req.method, req.path);
+  console.error('Request Body:', req.body);
+  console.error('=======================\n');
   
   if (err.message === 'CORS not allowed') {
     return res.status(403).json({ message: 'CORS not allowed' });
@@ -155,7 +189,7 @@ app.use((err, req, res, next) => {
 
   // Handle multer errors
   if (err.name === 'MulterError') {
-    console.error('Multer error code:', err.code);
+    console.error('🖼️ Multer error code:', err.code);
     if (err.code === 'LIMIT_FILE_SIZE') {
       return res.status(400).json({ message: 'File size exceeds 2MB limit' });
     }
@@ -179,19 +213,33 @@ app.use((err, req, res, next) => {
 });
 
 const server = app.listen(port, () => {
-  console.log(`\n========================================`);
-  console.log(`Server is running on port ${port}`);
-  console.log(`Uploads directory: ${uploadsDir}`);
-  console.log(`Access uploads at: http://localhost:${port}/uploads/`);
-  console.log(`Backend URL: http://localhost:${port}`);
-  console.log(`CORS allowed origins:`, allowedOrigins);
-  console.log(`========================================\n`);
+  console.log(`\n${'='.repeat(50)}`);
+  console.log(`✅ SERVER STARTED`);
+  console.log(`${'='.repeat(50)}`);
+  console.log(`🌐 Server running on: http://localhost:${port}`);
+  console.log(`📁 Uploads directory: ${uploadsDir}`);
+  console.log(`📸 Access uploads at: http://localhost:${port}/uploads/`);
+  console.log(`🔗 API Base URL: http://localhost:${port}/api/v1`);
+  console.log(`✅ CORS allowed origins:`, allowedOrigins);
+  console.log(`🗄️  Database: ${process.env.MONGO_URL ? 'Configured' : 'NOT SET'}`);
+  console.log(`${process.env.JWT_SECRET ? '🔐 JWT Secret: Configured' : '⚠️  JWT Secret: NOT SET'}`);
+  console.log(`${'='.repeat(50)}\n`);
 });
 
 // Handle server errors
 server.on('error', (err) => {
-  console.error('Server error:', err);
+  console.error('❌ Server error:', err);
   if (err.code === 'EADDRINUSE') {
-    console.error(`Port ${port} is already in use`);
+    console.error(`🚫 Port ${port} is already in use`);
+    console.error('Try: Kill the process using the port or change PORT in .env');
   }
+  process.exit(1);
+});
+
+// Graceful shutdown
+process.on('SIGTERM', () => {
+  console.log('⚠️  SIGTERM signal received: closing HTTP server');
+  server.close(() => {
+    console.log('✅ HTTP server closed');
+  });
 });

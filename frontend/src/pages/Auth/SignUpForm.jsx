@@ -70,6 +70,14 @@ const SignUpForm = () => {
     setLoading(true);
 
     try {
+      console.log("📝 Signup attempt:", { 
+        fullname, 
+        username, 
+        email,
+        hasProfileImage: !!profileImage,
+        apiUrl: import.meta.env.VITE_API_URL || 'http://localhost:8000'
+      });
+
       const formData = new FormData();
       formData.append("fullname", fullname.trim());
       formData.append("username", username.trim());
@@ -78,17 +86,13 @@ const SignUpForm = () => {
       
       if (profileImage) {
         formData.append("profileImage", profileImage.file);
+        console.log("📸 Profile image added:", profileImage.file.name);
       }
 
-      console.log("Attempting signup with:", { fullname, username, email, password: "***" });
+      // Don't manually set Content-Type for FormData - let browser handle it
+      const response = await axiosInstance.post(API_PATH.AUTH.REGISTER, formData);
 
-      const response = await axiosInstance.post(API_PATH.AUTH.REGISTER, formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
-
-      console.log("Signup response:", response.data);
+      console.log("✅ Signup response received:", response.status);
 
       if (response.status === 201) {
         const { token, user } = response.data;
@@ -102,6 +106,7 @@ const SignUpForm = () => {
         
         // Show success message
         toast.success("Account created successfully!");
+        console.log("✅ Account created for:", user.username);
         
         // Redirect to dashboard
         setTimeout(() => {
@@ -109,14 +114,26 @@ const SignUpForm = () => {
         }, 500);
       }
     } catch (error) {
-      console.error("Signup error:", error);
+      console.error("❌ Signup error details:", {
+        message: error.message,
+        status: error.response?.status,
+        data: error.response?.data,
+        url: error.config?.url,
+      });
       
       let errorMessage = "An unexpected error occurred";
       
-      if (error.response?.status === 409) {
+      if (error.message === 'Network Error') {
+        errorMessage = "Network error. Please check:\n✓ Backend is running on port 8000\n✓ Check browser console";
+        console.error('🚫 Network Error - Backend may not be running');
+      } else if (error.code === 'ECONNREFUSED') {
+        errorMessage = "Cannot connect to backend. Is it running on port 8000?";
+      } else if (error.response?.status === 409) {
         errorMessage = "User already exists. Please login instead.";
       } else if (error.response?.status === 429) {
         errorMessage = "Too many registration attempts. Please try again later.";
+      } else if (error.response?.status === 400) {
+        errorMessage = error.response.data?.message || "Invalid request";
       } else if (error.response?.data?.message) {
         errorMessage = error.response.data.message;
       } else if (error.response?.data?.errors) {
@@ -148,6 +165,7 @@ const SignUpForm = () => {
         preview: URL.createObjectURL(file),
         file: file
       });
+      console.log("📸 Image selected:", file.name);
     }
   };
 
