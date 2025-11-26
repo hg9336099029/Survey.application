@@ -11,6 +11,13 @@ axiosInstance.interceptors.request.use(config => {
   if (config && config.url && /^https?:\/\//i.test(config.url)) {
     return { ...config, baseURL: undefined };
   }
+
+  // Add Authorization header if token exists
+  const token = localStorage.getItem('accessToken');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+
   return config;
 }, err => Promise.reject(err));
 

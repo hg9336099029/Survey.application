@@ -18,8 +18,8 @@ const register = [
   body('email').isEmail().normalizeEmail(),
   body('password')
     .trim()
-    .isLength({ min: 8 })
-    .withMessage('Password must be at least 8 characters'),
+    .isLength({ min: 6 })
+    .withMessage('Password must be at least 6 characters'),
   async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -31,20 +31,8 @@ const register = [
 
     try {
       // Validate password separately (don't apply escape to password)
-      if (!password || password.length < 8) {
-        return res.status(400).json({ message: 'Password must be at least 8 characters long' });
-      }
-
-      if (!/[a-z]/.test(password)) {
-        return res.status(400).json({ message: 'Password must contain at least one lowercase letter' });
-      }
-
-      if (!/[A-Z]/.test(password)) {
-        return res.status(400).json({ message: 'Password must contain at least one uppercase letter' });
-      }
-
-      if (!/\d/.test(password)) {
-        return res.status(400).json({ message: 'Password must contain at least one number' });
+      if (!password || password.length < 6) {
+        return res.status(400).json({ message: 'Password must be at least 6 characters long' });
       }
 
       // Check if user already exists
@@ -55,8 +43,8 @@ const register = [
 
       const user = await User.create({ username, fullname, email, password });
       const token = generateToken(user._id);
-      
-      res.status(201).json({ 
+
+      res.status(201).json({
         token,
         user: {
           _id: user._id,
@@ -101,7 +89,7 @@ const login = [
       }
 
       const token = generateToken(user._id);
-      res.status(200).json({ 
+      res.status(200).json({
         token,
         user: {
           _id: user._id,
@@ -153,11 +141,11 @@ const updateProfile = async (req, res) => {
     }
 
     // Check if username already exists (excluding current user)
-    const existingUser = await User.findOne({ 
+    const existingUser = await User.findOne({
       username: username,
       _id: { $ne: userId }
     });
-    
+
     if (existingUser) {
       return res.status(409).json({ message: 'Username already taken' });
     }
@@ -189,7 +177,7 @@ const updateProfile = async (req, res) => {
 
     console.log('Updated user:', user);
 
-    res.status(200).json({ 
+    res.status(200).json({
       message: 'Profile updated successfully',
       user: {
         _id: user._id,
@@ -263,7 +251,7 @@ const changePassword = async (req, res) => {
     user.password = trimmedNewPassword;
     await user.save();
 
-    res.status(200).json({ 
+    res.status(200).json({
       message: 'Password changed successfully'
     });
   } catch (error) {

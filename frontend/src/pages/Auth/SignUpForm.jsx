@@ -45,14 +45,8 @@ const SignUpForm = () => {
 
     if (!password.trim()) {
       newErrors.password = "Password is required";
-    } else if (password.trim().length < 8) {
-      newErrors.password = "Password must be at least 8 characters";
-    } else if (!/[a-z]/.test(password)) {
-      newErrors.password = "Password must contain at least one lowercase letter";
-    } else if (!/[A-Z]/.test(password)) {
-      newErrors.password = "Password must contain at least one uppercase letter";
-    } else if (!/\d/.test(password)) {
-      newErrors.password = "Password must contain at least one number";
+    } else if (password.trim().length < 6) {
+      newErrors.password = "Password must be at least 6 characters";
     }
 
     setErrors(newErrors);
@@ -120,6 +114,8 @@ const SignUpForm = () => {
         data: error.response?.data,
         url: error.config?.url,
       });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -144,20 +140,14 @@ const SignUpForm = () => {
     if (!password) return { strength: 0, text: '', color: '' };
 
     let strength = 0;
-    if (password.length >= 8) strength++;
-    if (/[a-z]/.test(password)) strength++;
-    if (/[A-Z]/.test(password)) strength++;
-    if (/\d/.test(password)) strength++;
+    if (password.length >= 6) strength = 4;
 
     const strengthMap = {
-      0: { text: 'Very Weak', color: 'bg-red-500' },
-      1: { text: 'Weak', color: 'bg-orange-500' },
-      2: { text: 'Fair', color: 'bg-yellow-500' },
-      3: { text: 'Good', color: 'bg-blue-500' },
-      4: { text: 'Strong', color: 'bg-green-500' }
+      0: { text: 'Weak', color: 'bg-red-500' },
+      4: { text: 'Good', color: 'bg-green-500' }
     };
 
-    return { strength: strength * 25, ...strengthMap[strength] };
+    return { strength: strength * 25, ...strengthMap[strength] || strengthMap[0] };
   };
 
   const passwordStrength = getPasswordStrength();
@@ -268,7 +258,7 @@ const SignUpForm = () => {
                   if (errors.password) setErrors({ ...errors, password: "" });
                 }}
                 className={`w-full p-2 bg-gray-50 rounded text-sm border ${errors.password ? "border-red-500" : "border-gray-300"} focus:outline-none focus:ring-1 focus:ring-blue-500`}
-                placeholder="Min 8 Characters"
+                placeholder="Min 6 Characters"
                 disabled={loading}
               />
               {password && (
@@ -278,26 +268,17 @@ const SignUpForm = () => {
                       {[...Array(4)].map((_, i) => (
                         <div
                           key={i}
-                          className={`h-1 flex-1 rounded-full ${i < Math.ceil(passwordStrength / 25) ? passwordStrength > 0 ? passwordStrength > 50 ? 'bg-yellow-500' : 'bg-orange-500' : 'bg-red-500' : 'bg-gray-300'}`}
+                          className={`h-1 flex-1 rounded-full ${i < Math.ceil(passwordStrength.strength / 25) ? passwordStrength.color : 'bg-gray-300'}`}
                         ></div>
                       ))}
                     </div>
                     <p className="text-xs text-gray-600">
-                      Strength: <span className="font-semibold">{passwordStrength > 0 ? passwordStrength + '%' : '0%'}</span>
+                      Strength: <span className="font-semibold">{passwordStrength.text}</span>
                     </p>
                   </div>
                   <ul className="mt-2 space-y-1 text-xs text-gray-600">
-                    <li className={password.length >= 8 ? 'text-green-600 font-semibold' : ''}>
-                      ✓ At least 8 characters
-                    </li>
-                    <li className={/[a-z]/.test(password) ? 'text-green-600 font-semibold' : ''}>
-                      ✓ Lowercase letter (a-z)
-                    </li>
-                    <li className={/[A-Z]/.test(password) ? 'text-green-600 font-semibold' : ''}>
-                      ✓ Uppercase letter (A-Z)
-                    </li>
-                    <li className={/\d/.test(password) ? 'text-green-600 font-semibold' : ''}>
-                      ✓ Number (0-9)
+                    <li className={password.length >= 6 ? 'text-green-600 font-semibold' : ''}>
+                      ✓ At least 6 characters
                     </li>
                   </ul>
                 </>
