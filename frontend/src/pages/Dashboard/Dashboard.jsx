@@ -23,22 +23,33 @@ const Dashboard = () => {
     const fetchDashboardData = async () => {
       try {
         setLoading(true);
+        const token = localStorage.getItem('accessToken');
 
-        // Fetch all polls
+        // Fetch all polls (public)
         const pollsResponse = await axiosInstance.get(API_PATH.AUTH.GET_POLLS);
         const allPolls = pollsResponse.data.polls || [];
 
-        // Fetch user polls
-        const userPollsResponse = await axiosInstance.get(API_PATH.AUTH.GET_USERPOLLS);
-        const userPolls = userPollsResponse.data.polls || [];
+        let userPolls = [];
+        let votedPolls = [];
+        let bookmarkedPolls = [];
 
-        // Fetch voted polls
-        const votedPollsResponse = await axiosInstance.get(API_PATH.AUTH.GET_VOTED_POLLS);
-        const votedPolls = votedPollsResponse.data.votedPolls || [];
+        if (token) {
+          try {
+            // Fetch user polls
+            const userPollsResponse = await axiosInstance.get(API_PATH.AUTH.GET_USERPOLLS);
+            userPolls = userPollsResponse.data.polls || [];
 
-        // Fetch bookmarked polls
-        const bookmarkedResponse = await axiosInstance.get(API_PATH.AUTH.GET_BOOOKMARK_POLLS);
-        const bookmarkedPolls = bookmarkedResponse.data.bookmarkedPolls || [];
+            // Fetch voted polls
+            const votedPollsResponse = await axiosInstance.get(API_PATH.AUTH.GET_VOTED_POLLS);
+            votedPolls = votedPollsResponse.data.votedPolls || [];
+
+            // Fetch bookmarked polls
+            const bookmarkedResponse = await axiosInstance.get(API_PATH.AUTH.GET_BOOOKMARK_POLLS);
+            bookmarkedPolls = bookmarkedResponse.data.bookmarkedPolls || [];
+          } catch (authError) {
+            console.error('Error fetching authenticated data:', authError);
+          }
+        }
 
         // Calculate total votes
         const totalVotes = allPolls.reduce((sum, poll) => {

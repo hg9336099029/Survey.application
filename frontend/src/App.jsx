@@ -21,7 +21,7 @@ const ProtectedRoute = ({ children }) => {
 
 function App() {
   return (
-    <Router 
+    <Router
       future={{
         v7_startTransition: true,
         v7_relativeSplatPath: true,
@@ -32,87 +32,75 @@ function App() {
           {/* Auth Routes - Accessible to all */}
           <Route path="/signup" element={<SignUpForm />} />
           <Route path="/login" element={<Login />} />
-          
-          {/* Protected Dashboard Routes */}
-          <Route 
-            path="/dashboard" 
-            element={
-              <ProtectedRoute>
-                <Dashboard />
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/home" 
+
+          {/* Public Dashboard Route */}
+          <Route path="/dashboard" element={<Dashboard />} />
+
+          {/* Protected Routes */}
+          <Route
+            path="/home"
             element={
               <ProtectedRoute>
                 <Home />
               </ProtectedRoute>
-            } 
+            }
           />
-          <Route 
-            path="/create-poll" 
+          <Route
+            path="/create-poll"
             element={
               <ProtectedRoute>
                 <CreatePoll />
               </ProtectedRoute>
-            } 
+            }
           />
-          <Route 
-            path="/my-polls" 
+          <Route
+            path="/my-polls"
             element={
               <ProtectedRoute>
                 <Mypolls />
               </ProtectedRoute>
-            } 
+            }
           />
-          <Route 
-            path="/voted-polls" 
+          <Route
+            path="/voted-polls"
             element={
               <ProtectedRoute>
                 <VotedPolls />
               </ProtectedRoute>
-            } 
+            }
           />
-          <Route 
-            path="/bookmarks" 
+          <Route
+            path="/bookmarks"
             element={
               <ProtectedRoute>
                 <Bookmark />
               </ProtectedRoute>
-            } 
+            }
           />
-          <Route 
-            path="/settings" 
+          <Route
+            path="/settings"
             element={
               <ProtectedRoute>
                 <Settings />
               </ProtectedRoute>
-            } 
+            }
           />
-          <Route 
-            path="/edit-profile" 
+          <Route
+            path="/edit-profile"
             element={
               <ProtectedRoute>
                 <EditProfile />
               </ProtectedRoute>
-            } 
+            }
           />
-          
-          {/* Redirect root to dashboard if logged in, otherwise to login */}
-          <Route 
-            path="/" 
-            element={
-              localStorage.getItem('accessToken') ? 
-                <Navigate to="/dashboard" replace /> : 
-                <Navigate to="/login" replace />
-            } 
-          />
-          
+
+          {/* Redirect root to dashboard */}
+          <Route path="/" element={<Navigate to="/dashboard" replace />} />
+
           {/* 404 - Not Found Route */}
           <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>
-        
+
         {/* Toast Container for notifications */}
         <ToastContainer
           position="top-right"
