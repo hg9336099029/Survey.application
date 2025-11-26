@@ -14,6 +14,56 @@ dotenv.config();
 const app = express();
 
 // Trust proxy
+app.set('trust proxy', 1);
+
+// Request logging middleware - DO THIS FIRST
+app.use((req, res, next) => {
+  console.log(`\n📨 [${new Date().toISOString()}] ${req.method} ${req.path}`);
+  console.log('📍 Origin:', req.headers.origin);
+  console.log('📦 Content-Type:', req.headers['content-type']);
+  next();
+});
+
+// Security headers (but allow images to be served)
+app.use(helmet({
+  crossOriginResourcePolicy: false,
+}));
+
+// CORS Configuration - MUST BE BEFORE ROUTES
+const allowedOrigins = [
+  'http://localhost:3000',
+  'http://localhost:5173',
+  'http://127.0.0.1:3000',
+  'http://127.0.0.1:5173',
+  process.env.FRONTEND_URL,
+];
+
+const corsOptions = {
+  origin: function (origin, callback) {
+    console.log('🔍 CORS check for origin:', origin);
+
+    // Allow requests with no origin (like mobile apps or Postman)
+    if (!origin || allowedOrigins.includes(origin) || (origin && origin.endsWith('.vercel.app'))) {
+      console.log('✅ CORS allowed');
+      callback(null, true);
+    } else {
+      console.log('❌ CORS blocked for:', origin);
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  optionsSuccessStatus: 200,
+  maxAge: 86400, // 24 hours
+};
+
+app.use(cors(corsOptions));
+
+// Handle preflight OPTIONS requests
+app.options('*', cors(corsOptions));
+
+// General rate limiting for all requests
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 100,
