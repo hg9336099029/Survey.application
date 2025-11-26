@@ -32,18 +32,18 @@ export const DashboardLayout = ({ children }) => {
   const handleLogout = async () => {
     try {
       await axiosInstance.post(API_PATH.AUTH.LOGOUT);
-      
+
       localStorage.removeItem('accessToken');
       localStorage.removeItem('user');
-      
+
       clearUserDetails();
-      
+
       toast.success('Logged out successfully');
-      
+
       navigate('/login', { replace: true });
     } catch (error) {
       console.error('Logout error:', error);
-      
+
       localStorage.removeItem('accessToken');
       localStorage.removeItem('user');
       clearUserDetails();
@@ -70,7 +70,7 @@ export const DashboardLayout = ({ children }) => {
               </svg>
             </div>
             <div>
-              <h1 className="text-xl font-bold text-white">PollHub</h1>
+              <h1 className="text-xl font-bold text-white">Pollsense Ai</h1>
               <p className="text-xs text-gray-400">Analytics</p>
             </div>
           </div>
@@ -141,7 +141,7 @@ export const DashboardLayout = ({ children }) => {
         {/* Sidebar Footer */}
         <div className="p-4 border-t border-gray-700 bg-gray-800 space-y-3">
           {/* User Profile Card */}
-          <Link 
+          <Link
             to="/edit-profile"
             className="flex items-center gap-3 p-3 bg-gray-700 hover:bg-gray-600 rounded-lg transition-all duration-200"
           >
