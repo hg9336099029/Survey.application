@@ -17,7 +17,7 @@ const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     // Validation
     if (!email.trim()) {
       setError("Please enter email");
@@ -29,37 +29,37 @@ const Login = () => {
       toast.error("Please enter password");
       return;
     }
-    
+
     setError("");
     setLoading(true);
 
     try {
-      console.log("🔐 Login attempt:", { 
+      console.log("🔐 Login attempt:", {
         email: email.trim(),
         apiUrl: import.meta.env.VITE_API_URL || 'http://localhost:8000'
       });
-      
-      const response = await axiosInstance.post(API_PATH.AUTH.LOGIN, { 
-        email: email.trim(), 
-        password: password.trim() 
+
+      const response = await axiosInstance.post(API_PATH.AUTH.LOGIN, {
+        email: email.trim(),
+        password: password.trim()
       });
 
       console.log("✅ Login response received:", response.status);
 
       const { token, user } = response.data;
-      
+
       if (token && user) {
         // Store token and user data
         localStorage.setItem("accessToken", token);
         localStorage.setItem("user", JSON.stringify(user));
-        
+
         // Update context
         setUserDetails(user);
-        
+
         // Show success message
         toast.success("Login successful!");
         console.log("✅ User logged in:", user.username);
-        
+
         // Redirect to dashboard
         setTimeout(() => {
           navigate("/dashboard", { replace: true });
@@ -75,26 +75,31 @@ const Login = () => {
         data: error.response?.data,
         url: error.config?.url,
       });
-      
+
       let errorMessage = "An unexpected error occurred";
-      
       if (error.message === 'Network Error') {
         errorMessage = "Network error. Please check:\n✓ Backend is running on port 8000\n✓ API URL is correct\n✓ Check browser console for details";
         console.error('🚫 Network Error - Backend may not be running');
       } else if (error.code === 'ECONNREFUSED') {
         errorMessage = "Cannot connect to backend. Is it running on port 8000?";
+      } else if (error.response?.data?.errors) {
+        // Handle validation errors
+        const validationErrors = error.response.data.errors;
+        if (Array.isArray(validationErrors)) {
+          errorMessage = validationErrors.map(err => err.msg).join(", ");
+        }
+      } else if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
       } else if (error.response?.status === 429) {
         errorMessage = "Too many login attempts. Please try again later.";
       } else if (error.response?.status === 401) {
         errorMessage = "Invalid email or password";
       } else if (error.response?.status === 400) {
-        errorMessage = error.response.data?.message || "Invalid request";
-      } else if (error.response?.data?.message) {
-        errorMessage = error.response.data.message;
+        errorMessage = "Invalid request";
       } else if (error.message) {
         errorMessage = error.message;
       }
-      
+
       setError(errorMessage);
       toast.error(errorMessage);
     } finally {

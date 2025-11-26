@@ -1,6 +1,6 @@
 import React from 'react'
 
-const Authlayout = ({children}) => {
+const Authlayout = ({ children }) => {
   return (
     <div className='flex h-screen bg-gray-900'>
       {/* Left section - Auth Form */}
@@ -13,7 +13,7 @@ const Authlayout = ({children}) => {
                 <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z" />
               </svg>
             </div>
-            <h1 className='text-3xl font-bold bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent'>PollHub</h1>
+            <h1 className='text-3xl font-bold bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent'>Pollsense Ai Analytics</h1>
           </div>
           <p className="text-gray-400 text-sm">Your platform for powerful polling and insights</p>
         </div>
@@ -25,7 +25,7 @@ const Authlayout = ({children}) => {
 
         {/* Footer Text */}
         <p className="text-gray-500 text-xs text-center mt-8">
-          © 2024 PollHub. All rights reserved.
+          © 2024 Pollsense Ai Analytics. All rights reserved.
         </p>
       </div>
 
@@ -33,14 +33,14 @@ const Authlayout = ({children}) => {
       <div className="hidden lg:flex lg:w-1/2 flex-col items-center justify-center p-12 relative overflow-hidden">
         {/* Background gradient */}
         <div className="absolute inset-0 bg-gradient-to-br from-blue-600 via-purple-600 to-pink-600 opacity-10"></div>
-        
+
         {/* Animated shapes */}
         <div className="absolute top-20 right-10 w-72 h-72 bg-blue-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse"></div>
-        <div className="absolute bottom-20 left-10 w-72 h-72 bg-purple-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse" style={{animationDelay: '2s'}}></div>
+        <div className="absolute bottom-20 left-10 w-72 h-72 bg-purple-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse" style={{ animationDelay: '2s' }}></div>
 
         {/* Content */}
         <div className="relative z-10 text-white text-center">
-          <h2 className="text-5xl font-bold mb-6">Welcome to PollHub</h2>
+          <h2 className="text-5xl font-bold mb-6">Welcome to Pollsense Ai Analytics</h2>
           <p className="text-xl text-gray-200 mb-12">Create, share, and analyze polls with real-time insights</p>
 
           {/* Features */}

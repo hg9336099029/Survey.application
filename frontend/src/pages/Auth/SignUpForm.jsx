@@ -11,7 +11,7 @@ import 'react-toastify/dist/ReactToastify.css';
 const SignUpForm = () => {
   const navigate = useNavigate();
   const { setUserDetails } = useContext(UserContext);
-  
+
   const [fullname, setfullname] = useState("");
   const [email, setEmail] = useState("");
   const [username, setUsername] = useState("");
@@ -61,7 +61,7 @@ const SignUpForm = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       toast.error("Please fix the errors above");
       return;
@@ -70,9 +70,9 @@ const SignUpForm = () => {
     setLoading(true);
 
     try {
-      console.log("📝 Signup attempt:", { 
-        fullname, 
-        username, 
+      console.log("📝 Signup attempt:", {
+        fullname,
+        username,
         email,
         hasProfileImage: !!profileImage,
         apiUrl: import.meta.env.VITE_API_URL || 'http://localhost:8000'
@@ -83,7 +83,7 @@ const SignUpForm = () => {
       formData.append("username", username.trim());
       formData.append("email", email.trim());
       formData.append("password", password.trim());
-      
+
       if (profileImage) {
         formData.append("profileImage", profileImage.file);
         console.log("📸 Profile image added:", profileImage.file.name);
@@ -96,18 +96,18 @@ const SignUpForm = () => {
 
       if (response.status === 201) {
         const { token, user } = response.data;
-        
+
         // Store token and user data
         localStorage.setItem("accessToken", token);
         localStorage.setItem("user", JSON.stringify(user));
-        
+
         // Update context
         setUserDetails(user);
-        
+
         // Show success message
         toast.success("Account created successfully!");
         console.log("✅ Account created for:", user.username);
-        
+
         // Redirect to dashboard
         setTimeout(() => {
           navigate("/dashboard", { replace: true });
@@ -120,35 +120,6 @@ const SignUpForm = () => {
         data: error.response?.data,
         url: error.config?.url,
       });
-      
-      let errorMessage = "An unexpected error occurred";
-      
-      if (error.message === 'Network Error') {
-        errorMessage = "Network error. Please check:\n✓ Backend is running on port 8000\n✓ Check browser console";
-        console.error('🚫 Network Error - Backend may not be running');
-      } else if (error.code === 'ECONNREFUSED') {
-        errorMessage = "Cannot connect to backend. Is it running on port 8000?";
-      } else if (error.response?.status === 409) {
-        errorMessage = "User already exists. Please login instead.";
-      } else if (error.response?.status === 429) {
-        errorMessage = "Too many registration attempts. Please try again later.";
-      } else if (error.response?.status === 400) {
-        errorMessage = error.response.data?.message || "Invalid request";
-      } else if (error.response?.data?.message) {
-        errorMessage = error.response.data.message;
-      } else if (error.response?.data?.errors) {
-        // Handle validation errors
-        const validationErrors = error.response.data.errors;
-        if (Array.isArray(validationErrors)) {
-          errorMessage = validationErrors.map(err => err.msg).join(", ");
-        }
-      } else if (error.message) {
-        errorMessage = error.message;
-      }
-      
-      toast.error(errorMessage);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -160,7 +131,7 @@ const SignUpForm = () => {
         toast.error("Image must be less than 2MB");
         return;
       }
-      
+
       setProfileImage({
         preview: URL.createObjectURL(file),
         file: file
@@ -171,13 +142,13 @@ const SignUpForm = () => {
 
   const getPasswordStrength = () => {
     if (!password) return { strength: 0, text: '', color: '' };
-    
+
     let strength = 0;
     if (password.length >= 8) strength++;
     if (/[a-z]/.test(password)) strength++;
     if (/[A-Z]/.test(password)) strength++;
     if (/\d/.test(password)) strength++;
-    
+
     const strengthMap = {
       0: { text: 'Very Weak', color: 'bg-red-500' },
       1: { text: 'Weak', color: 'bg-orange-500' },
@@ -185,7 +156,7 @@ const SignUpForm = () => {
       3: { text: 'Good', color: 'bg-blue-500' },
       4: { text: 'Strong', color: 'bg-green-500' }
     };
-    
+
     return { strength: strength * 25, ...strengthMap[strength] };
   };
 

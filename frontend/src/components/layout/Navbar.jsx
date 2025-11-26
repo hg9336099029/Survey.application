@@ -91,7 +91,7 @@ const Navbar = () => {
           </div>
           <div>
             <h1 className="text-xl font-bold bg-gradient-to-r from-blue-500 to-purple-600 bg-clip-text text-transparent">
-              PollHub
+              Pollsense Ai
             </h1>
             <p className="text-xs text-gray-500">Analytics</p>
           </div>
@@ -102,7 +102,7 @@ const Navbar = () => {
           {/* Stats Section */}
           <div className="hidden lg:flex items-center gap-4">
             {/* Voted Polls */}
-            <Link 
+            <Link
               to="/voted-polls"
               className="flex flex-col items-center px-4 py-2 rounded-lg hover:bg-blue-50 transition-colors group"
             >
@@ -113,7 +113,7 @@ const Navbar = () => {
             </Link>
 
             {/* Bookmarked Polls */}
-            <Link 
+            <Link
               to="/bookmarks"
               className="flex flex-col items-center px-4 py-2 rounded-lg hover:bg-orange-50 transition-colors group"
             >
@@ -124,7 +124,7 @@ const Navbar = () => {
             </Link>
 
             {/* Created Polls */}
-            <Link 
+            <Link
               to="/my-polls"
               className="flex flex-col items-center px-4 py-2 rounded-lg hover:bg-purple-50 transition-colors group"
             >
@@ -163,10 +163,10 @@ const Navbar = () => {
                 <p className="text-sm font-semibold text-gray-900">{displayName}</p>
                 <p className="text-xs text-gray-500">@{displayName}</p>
               </div>
-              <svg 
+              <svg
                 className={`w-4 h-4 text-gray-600 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`}
-                fill="none" 
-                stroke="currentColor" 
+                fill="none"
+                stroke="currentColor"
                 viewBox="0 0 24 24"
               >
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />

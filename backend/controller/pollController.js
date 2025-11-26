@@ -135,30 +135,30 @@ const getVotedPolls = async (req, res) => {
 
 // Bookmark a poll
 
-const bookmarkpoll =async(req,res) =>{
-    try{
-        const {pollId} = req.params;
+const bookmarkpoll = async (req, res) => {
+    try {
+        const { pollId } = req.params;
         const poll = await Poll.findById(pollId);
-        if(!poll){
-            return res.status(404).json({message:"Poll not found"});
+        if (!poll) {
+            return res.status(404).json({ message: "Poll not found" });
         }
 
         // Check if the poll is already bookmarked
         const user = await User.findById(req.user._id);
-        
-        if(user.bookmarkedPolls.includes(pollId)){
-            return res.status(400).json({message:"Poll already bookmarked"});
+
+        if (user.bookmarkedPolls.includes(pollId)) {
+            return res.status(400).json({ message: "Poll already bookmarked" });
         }
 
         // Add poll ID to the user's bookmarkedPolls
         user.bookmarkedPolls.push(poll._id);
         await user.save();
 
-        res.status(200).json({message:"Poll bookmarked successfully",poll});
+        res.status(200).json({ message: "Poll bookmarked successfully", poll });
 
     }
-    catch(error){
-        res.status(500).json({error:error.message});
+    catch (error) {
+        res.status(500).json({ error: error.message });
     }
 }
 
@@ -174,5 +174,25 @@ const getbookmarkedPolls = async (req, res) => {
     }
 };
 
+// Get trending polls
+const getTrendingPolls = async (req, res) => {
+    try {
+        const polls = await Poll.find()
+            .populate('createdBy', 'username fullname')
+            .lean();
 
-module.exports = { createPoll, getAllPolls, getUserPolls, deletePoll, voteOnPoll, getVotedPolls,bookmarkpoll, getbookmarkedPolls };
+        // Sort by total votes
+        const trending = polls.sort((a, b) => {
+            const aVotes = a.options.reduce((sum, opt) => sum + opt.votes, 0);
+            const bVotes = b.options.reduce((sum, opt) => sum + opt.votes, 0);
+            return bVotes - aVotes;
+        }).slice(0, 5);
+
+        res.status(200).json({ polls: trending });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
+
+
+module.exports = { createPoll, getAllPolls, getUserPolls, deletePoll, voteOnPoll, getVotedPolls, bookmarkpoll, getbookmarkedPolls, getTrendingPolls };

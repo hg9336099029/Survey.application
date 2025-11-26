@@ -1,12 +1,13 @@
 const express = require('express');
 const { register, login, logout, getuserdetails, updateProfile, changePassword } = require('../controller/authController');
-const { createPoll, getAllPolls, getUserPolls, deletePoll, voteOnPoll, getVotedPolls, bookmarkpoll, getbookmarkedPolls } = require('../controller/pollController');
+
+const { createPoll, getAllPolls, getUserPolls, deletePoll, voteOnPoll, getVotedPolls, bookmarkpoll, getbookmarkedPolls, getTrendingPolls } = require('../controller/pollController');
 const protect = require('../middleware/authmiddleware');
 const upload = require('../middleware/uploadmiddleware');
 const router = express.Router();
 
 // Auth routes
-router.post('/register', (req, res, next) => {
+router.post('/register', upload.single('profileImage'), (req, res, next) => {
   console.log('Register route called with body:', req.body);
   next();
 }, register);
@@ -81,5 +82,10 @@ router.get('/getbookmarkedpolls', protect, (req, res, next) => {
   console.log('Get bookmarked polls route called');
   next();
 }, getbookmarkedPolls);
+
+router.get('/trendingpolls', (req, res, next) => {
+  console.log('Get trending polls route called');
+  next();
+}, getTrendingPolls);
 
 module.exports = router;
